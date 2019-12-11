@@ -1,0 +1,103 @@
+<html dir="LTR">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5" />
+    <title>MySQLDeleteCommand Constructor</title>
+    <xml>
+    </xml>
+    <link rel="stylesheet" type="text/css" href="MSDN.css" />
+  </head>
+  <body id="bodyID" class="dtBODY">
+    <div id="nsbanner">
+      <div id="bannerrow1">
+        <table class="bannerparthead" cellspacing="0">
+          <tr id="hdr">
+            <td class="runninghead">MySQLDriverCS: An C# driver for MySQL. </td>
+            <td class="product">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="TitleRow">
+        <h1 class="dtH1">MySQLDeleteCommand Constructor </h1>
+      </div>
+    </div>
+    <div id="nstext">
+      <p> Construct and Run a simple delete command. </p>
+      <div class="syntax">
+        <span class="lang">[Visual Basic]</span>
+        <br />Public Sub New( _<br />   ByVal <i>conn</i> As <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a>, _<br />   ByVal <i>Table</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String</a>, _<br />   ByVal <i>WhereParamFields</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">Object(,)</a>, _<br />   ByVal <i>WhereNoparamFields</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a> _<br />)</div>
+      <div class="syntax">
+        <span class="lang">[C#]</span>
+        <br />public MySQLDeleteCommand(<br />   <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a> <i>conn</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string</a> <i>Table</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">object[,]</a> <i>WhereParamFields</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>WhereNoparamFields</i><br />);</div>
+      <h4 class="dtH4">Parameters</h4>
+      <dl>
+        <dt>
+          <i>conn</i>
+        </dt>
+        <dd>Database connection</dd>
+        <dt>
+          <i>Table</i>
+        </dt>
+        <dd>Table name</dd>
+        <dt>
+          <i>WhereParamFields</i>
+        </dt>
+        <dd>Tripplets of parameters, operand and its values to match (null - nothing). For example: <pre class="code">new object[,]{{"myfield","=",myvalue},{"myfield2","&lt;&gt;",myvalue2}}
+ 
+new object[,]{{"myfield","=",100}}
+ 
+new object[,]{{"myfield","=",myvalue}}
+
+null
+</pre>
+            </dd>
+        <dt>
+          <i>WhereNoparamFields</i>
+        </dt>
+        <dd>Tripplets of parameters, operand and expressions (or other fields for joining) to match (null - nothing). For example: <pre class="code">new object[,]{{"myfield","=","myfield2"}}
+
+null
+</pre>
+            </dd>
+      </dl>
+      <h4 class="dtH4">Example</h4>
+      <p>Example:<pre class="code">using MySQLDriverCS;
+...
+MySQLConnection DBConn;
+DBConn = new MySQLConnection( new MySQLConnectionString("myhost","mydatabase","mylogin","mypassword").AsString );
+DBConn.Open();
+...
+new MySQLDeleteCommand(
+    DBConn,
+    "Trash",
+    new object[,]{{"myfield","=",myvalue}},
+    new object[,]{{"myfield","=","myfield2"}}
+    );
+...
+new MySQLDeleteCommand(
+    DBConn,
+    "Trash",
+    new object[,]{{"myfield2","=",myvalue2},{"myfield3","&lt;&gt;",myvalue3}},
+    null
+    );
+...
+DBConn.Close();
+</pre></p>
+      <h4 class="dtH4">See Also</h4>
+      <p>
+        <a href="MySQLDriverCS.MySQLDeleteCommand.html">MySQLDeleteCommand Class</a> | <a href="MySQLDriverCS.html">MySQLDriverCS Namespace</a></p>
+      <object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" viewastext="true" style="display: none;">
+        <param name="Keyword" value="MySQLDeleteCommand class, constructor">
+        </param>
+      </object>
+      <hr />
+      <div id="footer">
+        <p>
+          <a href="http://www.gnu.org/licenses/lgpl.txt">Copyright (c) 2002-2007 Manuel Lucas Viñas Livschitz.</a>
+        </p>
+        <p>Generated from assembly MySQLDriverCS [3.0.1735.36021]</p>
+      </div>
+    </div>
+  </body>
+</html>

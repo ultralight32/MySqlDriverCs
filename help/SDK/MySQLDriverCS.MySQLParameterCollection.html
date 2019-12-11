@@ -1,0 +1,96 @@
+<html dir="LTR">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5" />
+    <title>MySQLParameterCollection Class</title>
+    <xml>
+    </xml>
+    <link rel="stylesheet" type="text/css" href="MSDN.css" />
+  </head>
+  <body id="bodyID" class="dtBODY">
+    <div id="nsbanner">
+      <div id="bannerrow1">
+        <table class="bannerparthead" cellspacing="0">
+          <tr id="hdr">
+            <td class="runninghead">MySQLDriverCS: An C# driver for MySQL. </td>
+            <td class="product">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="TitleRow">
+        <h1 class="dtH1">MySQLParameterCollection Class</h1>
+      </div>
+    </div>
+    <div id="nstext">
+      <p> Collects all parameters relevant to a MySQLCommand. This class cannot be inherited </p>
+      <p>For a list of all members of this type, see <a href="MySQLDriverCS.MySQLParameterCollectionMembers.html">MySQLParameterCollection Members</a>.</p>
+      <p>
+        <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">System.Object</a>
+        <br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemMarshalByRefObjectClassTopic.htm">System.MarshalByRefObject</a><br />      <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbParameterCollectionClassTopic.htm">System.Data.Common.DbParameterCollection</a><br />         <b>MySQLDriverCS.MySQLParameterCollection</b></p>
+      <div class="syntax">
+        <span class="lang">[Visual Basic]</span>
+        <br />NotInheritable Public Class MySQLParameterCollection<div>    Inherits <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbParameterCollectionClassTopic.htm">DbParameterCollection</a></div></div>
+      <div class="syntax">
+        <span class="lang">[C#]</span>
+        <div>public sealed class MySQLParameterCollection<b> : <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbParameterCollectionClassTopic.htm">DbParameterCollection</a></b></div>
+      </div>
+      <H4 class="dtH4">Thread Safety</H4>
+      <P>Public static (<b>Shared</b> in Visual Basic) members of this type are 
+				safe for multithreaded operations. Instance members are <b>not</b> guaranteed to be 
+				thread-safe.</P>
+      <h4 class="dtH4">Example</h4>
+      <p>Example code to use MySQLParameter and MySQLParameterCollection <pre class="code"> using MySQLDriverCS;
+ ...
+ MySQLConnection DBConn;
+ DBConn = new MySQLConnection( new MySQLConnectionString("myhost","mydatabase","mylogin","mypassword").AsString );
+ DBConn.Open();
+ ...
+ // Query to execute.. 
+ // Note @myvaluefield1 and @myvaluefield2 are name parameters in query
+ string query = "update mytable set myfield1 = @myvaluefield1 where myfield2 = @myvaluefield2";
+
+ MySQLParameter par = new MySQLParameter("@myvaluefield1",System.Data.DbType.String, "This value is ignored");
+ par.Value = "ju`a'n";
+ 
+ MySQLParameter par1 = new MySQLParameter("@myvaluefield2",System.Data.DbType.Int16, "This value is ignored");
+ par1.Value = 1;
+ 
+ MySQLCommand command = new MySQLCommand(query, conn);
+        
+ command.CommandType = CommandType.Text;
+ 
+ //Use Parameter property to add parameters in ParameterCollection
+ command.Parameters.Add(par);
+ command.Parameters.Add(par1);
+ 
+ 
+ command.ExecuteNonQuery();
+ ...
+ DBConn.Close();
+ </pre></p>
+      <h4 class="dtH4">Requirements</h4>
+      <p>
+        <b>Namespace: </b>
+        <a href="MySQLDriverCS.html">MySQLDriverCS</a>
+      </p>
+      <p>
+        <b>Assembly: </b>MySQLDriverCS (in MySQLDriverCS.dll)
+					</p>
+      <h4 class="dtH4">See Also</h4>
+      <p>
+        <a href="MySQLDriverCS.MySQLParameterCollectionMembers.html">MySQLParameterCollection Members</a> | <a href="MySQLDriverCS.html">MySQLDriverCS Namespace</a></p>
+      <object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" viewastext="true" style="display: none;">
+        <param name="Keyword" value="MySQLParameterCollection class, about MySQLParameterCollection class">
+        </param>
+      </object>
+      <hr />
+      <div id="footer">
+        <p>
+          <a href="http://www.gnu.org/licenses/lgpl.txt">Copyright (c) 2002-2007 Manuel Lucas Viñas Livschitz.</a>
+        </p>
+        <p>Generated from assembly MySQLDriverCS [3.0.1735.36021]</p>
+      </div>
+    </div>
+  </body>
+</html>

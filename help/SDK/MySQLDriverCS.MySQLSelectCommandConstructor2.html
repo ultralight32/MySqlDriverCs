@@ -1,0 +1,147 @@
+<html dir="LTR">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5" />
+    <title>MySQLSelectCommand Constructor (MySQLConnection, String[], String[], Object[,], String[,], String[,], Boolean, Int32, Int32, Boolean)</title>
+    <xml>
+    </xml>
+    <link rel="stylesheet" type="text/css" href="MSDN.css" />
+  </head>
+  <body id="bodyID" class="dtBODY">
+    <div id="nsbanner">
+      <div id="bannerrow1">
+        <table class="bannerparthead" cellspacing="0">
+          <tr id="hdr">
+            <td class="runninghead">MySQLDriverCS: An C# driver for MySQL. </td>
+            <td class="product">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="TitleRow">
+        <h1 class="dtH1">MySQLSelectCommand Constructor (MySQLConnection, String[], String[], Object[,], String[,], String[,], Boolean, Int32, Int32, Boolean)</h1>
+      </div>
+    </div>
+    <div id="nstext">
+      <p> A shortcut to make a simple select command with where, sorting part, and limit usage. (where and sorting would be null, and limits false) </p>
+      <div class="syntax">
+        <span class="lang">[Visual Basic]</span>
+        <br />Overloads Public Sub New( _<br />   ByVal <i>conn</i> As <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a>, _<br />   ByVal <i>Fields</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>Tables</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>WhereParamFields</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">Object(,)</a>, _<br />   ByVal <i>WhereNoparamFields</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a>, _<br />   ByVal <i>Sorting</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a>, _<br />   ByVal <i>useLimits</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemBooleanClassTopic.htm">Boolean</a>, _<br />   ByVal <i>limitStartRow</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">Integer</a>, _<br />   ByVal <i>limitRows</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">Integer</a>, _<br />   ByVal <i>Distinct</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemBooleanClassTopic.htm">Boolean</a> _<br />)</div>
+      <div class="syntax">
+        <span class="lang">[C#]</span>
+        <br />public MySQLSelectCommand(<br />   <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a> <i>conn</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>Fields</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>Tables</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">object[,]</a> <i>WhereParamFields</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>WhereNoparamFields</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>Sorting</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemBooleanClassTopic.htm">bool</a> <i>useLimits</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">int</a> <i>limitStartRow</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">int</a> <i>limitRows</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemBooleanClassTopic.htm">bool</a> <i>Distinct</i><br />);</div>
+      <h4 class="dtH4">Parameters</h4>
+      <dl>
+        <dt>
+          <i>conn</i>
+        </dt>
+        <dd>Database connection</dd>
+        <dt>
+          <i>Fields</i>
+        </dt>
+        <dd>An array of field names (or expressions) as strings. Examples: <pre class="code">new string[]{"id","name"}
+
+new string[]{"id",name}
+
+new string[]{"id"}
+
+null
+</pre>
+            </dd>
+        <dt>
+          <i>Tables</i>
+        </dt>
+        <dd>An array of table names as strings. Examples: <pre class="code">new string[]{"trash","users"}
+
+new string[]{"trash",users}
+
+new string[]{"trash"}
+
+null
+</pre>
+            </dd>
+        <dt>
+          <i>WhereParamFields</i>
+        </dt>
+        <dd>Tripplets of parameters, operand and its values to match (null - nothing). For example: <pre class="code">new object[,]{{"myfield","=",myvalue},{"myfield2","&lt;&gt;",myvalue2}}
+ 
+new object[,]{{"myfield","=",100}}
+ 
+new object[,]{{"myfield","=",myvalue}}
+
+null
+</pre>
+            </dd>
+        <dt>
+          <i>WhereNoparamFields</i>
+        </dt>
+        <dd>Tripplets of parameters, operand and expressions (or other fields for joining) to match (null - nothing). For example: <pre class="code">new object[,]{{"myfield","=","myfield2"}}
+
+null
+</pre>
+            </dd>
+        <dt>
+          <i>Sorting</i>
+        </dt>
+        <dd>Pairs of {field,sorttype} as an string array. For example: <pre class="code">new string[] {{"SettingID","ASC"},{"SettingValue","DESC"}}
+
+new string[] {{"SettingID","ASC"}}
+
+null
+</pre></dd>
+        <dt>
+          <i>useLimits</i>
+        </dt>
+        <dd>True if using limits</dd>
+        <dt>
+          <i>limitStartRow</i>
+        </dt>
+        <dd>Start row number, 0 by default</dd>
+        <dt>
+          <i>limitRows</i>
+        </dt>
+        <dd>How many rows are show (maximun). Use <pre class="code">MySQLSelectCommand(..,true,0,1)</pre> for expecting one value.</dd>
+        <dt>
+          <i>Distinct</i>
+        </dt>
+        <dd>Distinct is active</dd>
+      </dl>
+      <h4 class="dtH4">Example</h4>
+      <p>Example looking for SettingValue by SettingID<pre class="code">using MySQLDriverCS;
+...
+MySQLConnection DBConn;
+DBConn = new MySQLConnection( new MySQLConnectionString("myhost","mydatabase","mylogin","mypassword").AsString );
+DBConn.Open();
+...
+DataTable dt = new MySQLSelectCommand(DBConn,
+    new string[] {"SettingID","SettingValue"},
+    new string[] {"Settings"},
+    new object[,] {{"SettingID","=",SettingID}},
+    null,
+    null
+).Table;
+string Value = null;
+if(dt.Rows.Count!=0)
+{
+    Value = dt.Rows[0]["SettingValue] as string;
+}
+else
+{
+    // Value not found
+}
+...
+DBConn.Close();
+</pre></p>
+      <h4 class="dtH4">See Also</h4>
+      <p>
+        <a href="MySQLDriverCS.MySQLSelectCommand.html">MySQLSelectCommand Class</a> | <a href="MySQLDriverCS.html">MySQLDriverCS Namespace</a> | <a href="MySQLDriverCS.MySQLSelectCommandConstructor.html">MySQLSelectCommand Constructor Overload List</a></p>
+      <hr />
+      <div id="footer">
+        <p>
+          <a href="http://www.gnu.org/licenses/lgpl.txt">Copyright (c) 2002-2007 Manuel Lucas Viñas Livschitz.</a>
+        </p>
+        <p>Generated from assembly MySQLDriverCS [3.0.1735.36021]</p>
+      </div>
+    </div>
+  </body>
+</html>

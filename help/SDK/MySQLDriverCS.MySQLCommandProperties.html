@@ -1,0 +1,70 @@
+<html dir="LTR">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5" />
+    <title>MySQLCommand Properties</title>
+    <xml>
+    </xml>
+    <link rel="stylesheet" type="text/css" href="MSDN.css" />
+  </head>
+  <body id="bodyID" class="dtBODY">
+    <div id="nsbanner">
+      <div id="bannerrow1">
+        <table class="bannerparthead" cellspacing="0">
+          <tr id="hdr">
+            <td class="runninghead">MySQLDriverCS: An C# driver for MySQL. </td>
+            <td class="product">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="TitleRow">
+        <h1 class="dtH1">MySQLCommand Properties</h1>
+      </div>
+    </div>
+    <div id="nstext">
+      <p>The properties of the <b>MySQLCommand</b> class are listed below. For a complete list of <b>MySQLCommand</b> class members, see the <a href="MySQLDriverCS.MySQLCommandMembers.html">MySQLCommand Members</a> topic.</p>
+      <h4 class="dtH4">Public Instance Properties</h4>
+      <div class="tablediv">
+        <table class="dtTABLE" cellspacing="0">
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.CommandText.html">CommandText</a></td><td width="50%"> Gets or sets the text command to run against the data source. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.CommandTimeout.html">CommandTimeout</a></td><td width="50%"> Gets or sets the wait time before terminating the attempt to execute a command and generating an error. Set Is unsupported. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.CommandType.html">CommandType</a></td><td width="50%"> Indicates or specifies how the CommandText property is interpreted. Allways set to CommandType.Text . Set Is unsupported. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbCommandClassConnectionTopic.htm">Connection</a> (inherited from <b>DbCommand</b>)</td><td width="50%">Gets or sets the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbConnectionClassTopic.htm">DbConnection</a> used by this <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbCommandClassTopic.htm">DbCommand</a>.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassContainerTopic.htm">Container</a> (inherited from <b>Component</b>)</td><td width="50%">Gets the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelIContainerClassTopic.htm">IContainer</a> that contains the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassTopic.htm">Component</a>.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.DesignTimeVisible.html">DesignTimeVisible</a></td><td width="50%"> </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.FetchSize.html">FetchSize</a></td><td width="50%"> Number of rows to fetch from server at a time when using a cursor. Can be in the range from 1 to the maximum value of UInt32. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.Parameters1.html">Parameters</a></td><td width="50%">Overloaded.  Return a MySQLParameterCollection. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.ServerCursor.html">ServerCursor</a></td><td width="50%"> A server-side cursor allows a result set to be generated on the server side, but not transferred to the client except for those rows that the client requests. For example, if a client executes a query but is only interested in the first row, the remaining rows are not transferred. In MySQL, a server-side cursor is materialized into a temporary table. Initially, this is a MEMORY table, but is converted to a MyISAM table if its size reaches the value of the max_heap_table_size system variable. One limitation of the implementation is that for a large result set, retrieving its rows through a cursor might be slow. Cursors are read-only; you cannot use a cursor to update rows. When ServerCursor is true it sets UsePreparedStatement true automatically. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassSiteTopic.htm">Site</a> (inherited from <b>Component</b>)</td><td width="50%">Gets or sets the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelISiteClassTopic.htm">ISite</a> of the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassTopic.htm">Component</a>.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbCommandClassTransactionTopic.htm">Transaction</a> (inherited from <b>DbCommand</b>)</td><td width="50%">Gets or sets the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonDbTransactionClassTopic.htm">DbTransaction</a> within which this <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemDataCommonClassDbCommandTopic.htm">DbCommand</a> object executes.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.UpdatedRowSource.html">UpdatedRowSource</a></td><td width="50%"> UpdateRowSource </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="pubproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.UsePreparedStatement.html">UsePreparedStatement</a></td><td width="50%"> Provides for the use of prepared statements. Prepared execution is an efficient way to execute a statement more than once. The statement is first parsed to prepare it for execution. Then it is executed one or more times at a later time, using the statement handle returned by the initialization function. Prepared execution is faster than direct execution for statements executed more than once, primarily because the query is parsed only once. In the case of direct execution, the query is parsed every time it is executed. Prepared execution also can provide a reduction of network traffic because for each execution of the prepared statement, it is necessary only to send the data for the parameters. Prepared statements might not provide a performance increase in some situations. For best results, test your application both with prepared and non-prepared statements and choose whichever yields best performance. Another advantage of prepared statements is that it uses a binary protocol that makes data transfer between client and server more efficient. The following statements can be used as prepared statements: CREATE TABLE, DELETE, DO, INSERT, REPLACE, SELECT, SET, UPDATE, and most SHOW statements. Other statements are not supported in MySQL 5.0. </td></tr></table>
+      </div>
+      <h4 class="dtH4">Protected Instance Properties</h4>
+      <div class="tablediv">
+        <table class="dtTABLE" cellspacing="0">
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassCanRaiseEventsTopic.htm">CanRaiseEvents</a> (inherited from <b>Component</b>)</td><td width="50%">Gets a value indicating whether the component can raise an event.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.DbConnection.html">DbConnection</a></td><td width="50%"> Gets or sets the IDbConnection used by this instance of the IDbCommand. </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.DbParameterCollection.html">DbParameterCollection</a></td><td width="50%"> Inherited from IDbCommand </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="MySQLDriverCS.MySQLCommand.DbTransaction.html">DbTransaction</a></td><td width="50%"> Sets and gets transaction </td></tr>
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassDesignModeTopic.htm">DesignMode</a> (inherited from <b>Component</b>)</td><td width="50%">Gets a value that indicates whether the <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassTopic.htm">Component</a> is currently in design mode.</td></tr>
+<tr VALIGN="top"><td width="50%"><img src="protproperty.gif"></img><a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassEventsTopic.htm">Events</a> (inherited from <b>Component</b>)</td><td width="50%">Gets the list of event handlers that are attached to this <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemComponentModelComponentClassTopic.htm">Component</a>.</td></tr></table>
+      </div>
+      <h4 class="dtH4">See Also</h4>
+      <p>
+        <a href="MySQLDriverCS.MySQLCommand.html">MySQLCommand Class</a> | <a href="MySQLDriverCS.html">MySQLDriverCS Namespace</a></p>
+      <object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" viewastext="true" style="display: none;">
+        <param name="Keyword" value="MySQLCommand class, properties">
+        </param>
+      </object>
+      <hr />
+      <div id="footer">
+        <p>
+          <a href="http://www.gnu.org/licenses/lgpl.txt">Copyright (c) 2002-2007 Manuel Lucas Viñas Livschitz.</a>
+        </p>
+        <p>Generated from assembly MySQLDriverCS [3.0.1735.36021]</p>
+      </div>
+    </div>
+  </body>
+</html>

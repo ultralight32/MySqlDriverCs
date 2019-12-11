@@ -1,0 +1,100 @@
+<html dir="LTR">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5" />
+    <title>MySQLSelectCommand Constructor (MySQLConnection, String, String[,], String[], String[], Object[,], String[,], String[], Object[,], String[,], String[], Int32[], String)</title>
+    <xml>
+    </xml>
+    <link rel="stylesheet" type="text/css" href="MSDN.css" />
+  </head>
+  <body id="bodyID" class="dtBODY">
+    <div id="nsbanner">
+      <div id="bannerrow1">
+        <table class="bannerparthead" cellspacing="0">
+          <tr id="hdr">
+            <td class="runninghead">MySQLDriverCS: An C# driver for MySQL. </td>
+            <td class="product">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="TitleRow">
+        <h1 class="dtH1">MySQLSelectCommand Constructor (MySQLConnection, String, String[,], String[], String[], Object[,], String[,], String[], Object[,], String[,], String[], Int32[], String)</h1>
+      </div>
+    </div>
+    <div id="nstext">
+      <p> Extended SELECT with all settings (Except INTO OUTFILE/DUMPFILE for security reasons) </p>
+      <div class="syntax">
+        <span class="lang">[Visual Basic]</span>
+        <br />Overloads Public Sub New( _<br />   ByVal <i>conn</i> As <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a>, _<br />   ByVal <i>PrevFlags</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String</a>, _<br />   ByVal <i>FieldsAndAlias</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a>, _<br />   ByVal <i>FieldsTitles</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>Tables</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>WhereValues</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">Object(,)</a>, _<br />   ByVal <i>WhereExpressions</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a>, _<br />   ByVal <i>GroupBy</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>GroupByHavingValues</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">Object(,)</a>, _<br />   ByVal <i>GroupByHavingExpressions</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String(,)</a>, _<br />   ByVal <i>OrderBy</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String()</a>, _<br />   ByVal <i>Limit</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">Integer()</a>, _<br />   ByVal <i>LastFlags</i> As <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">String</a> _<br />)</div>
+      <div class="syntax">
+        <span class="lang">[C#]</span>
+        <br />public MySQLSelectCommand(<br />   <a href="MySQLDriverCS.MySQLConnection.html">MySQLConnection</a> <i>conn</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string</a> <i>PrevFlags</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>FieldsAndAlias</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>FieldsTitles</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>Tables</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">object[,]</a> <i>WhereValues</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>WhereExpressions</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>GroupBy</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemObjectClassTopic.htm">object[,]</a> <i>GroupByHavingValues</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[,]</a> <i>GroupByHavingExpressions</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string[]</a> <i>OrderBy</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemInt32ClassTopic.htm">int[]</a> <i>Limit</i>,<br />   <a href="ms-help://MS.NETFrameworkSDKv1.1/cpref/html/frlrfSystemStringClassTopic.htm">string</a> <i>LastFlags</i><br />);</div>
+      <h4 class="dtH4">Parameters</h4>
+      <dl>
+        <dt>
+          <i>conn</i>
+        </dt>
+        <dd>Database connection</dd>
+        <dt>
+          <i>PrevFlags</i>
+        </dt>
+        <dd>Flags used in SELECT: [STRAIGHT_JOIN] [SQL_SMALL_RESULT] [SQL_BIG_RESULT] [SQL_BUFFER_RESULT] [SQL_CACHE | SQL_NO_CACHE] [SQL_CALC_FOUND_ROWS] [HIGH_PRIORITY] [DISTINCT | DISTINCTROW | ALL]</dd>
+        <dt>
+          <i>FieldsAndAlias</i>
+        </dt>
+        <dd>fields like {{"f1"},{"f2"}} or {{"f1","aliasf1"},...}</dd>
+        <dt>
+          <i>FieldsTitles</i>
+        </dt>
+        <dd>If it's null they're retrieved from FieldsAndAlias. Useful for re-aliasing and required if you use AS or explicit index using.</dd>
+        <dt>
+          <i>Tables</i>
+        </dt>
+        <dd>Table list</dd>
+        <dt>
+          <i>WhereValues</i>
+        </dt>
+        <dd>Like {{field,op,value}...}</dd>
+        <dt>
+          <i>WhereExpressions</i>
+        </dt>
+        <dd>Like {{expr1,op,expr2}}</dd>
+        <dt>
+          <i>GroupBy</i>
+        </dt>
+        <dd>Like {{field}...} or {{field,ASC|DESC}...}</dd>
+        <dt>
+          <i>GroupByHavingValues</i>
+        </dt>
+        <dd>like {{field,op,value}...}</dd>
+        <dt>
+          <i>GroupByHavingExpressions</i>
+        </dt>
+        <dd>Like {expr1,expr2}</dd>
+        <dt>
+          <i>OrderBy</i>
+        </dt>
+        <dd>Like {{field}...} or {{field,ASC|DESC}...}</dd>
+        <dt>
+          <i>Limit</i>
+        </dt>
+        <dd>Like null, new int[]{}, new int{a number} (rows), or pair of numbers new int[]{offset,rows}</dd>
+        <dt>
+          <i>LastFlags</i>
+        </dt>
+        <dd>this includes PROCEDURE, FOR UPDATE and LOCK IN SHARE MODE</dd>
+      </dl>
+      <h4 class="dtH4">See Also</h4>
+      <p>
+        <a href="MySQLDriverCS.MySQLSelectCommand.html">MySQLSelectCommand Class</a> | <a href="MySQLDriverCS.html">MySQLDriverCS Namespace</a> | <a href="MySQLDriverCS.MySQLSelectCommandConstructor.html">MySQLSelectCommand Constructor Overload List</a></p>
+      <hr />
+      <div id="footer">
+        <p>
+          <a href="http://www.gnu.org/licenses/lgpl.txt">Copyright (c) 2002-2007 Manuel Lucas Viñas Livschitz.</a>
+        </p>
+        <p>Generated from assembly MySQLDriverCS [3.0.1735.36021]</p>
+      </div>
+    </div>
+  </body>
+</html>
