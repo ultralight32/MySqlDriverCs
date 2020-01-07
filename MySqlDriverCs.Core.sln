@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MySqlDriverCs.Core", "src\MySqlDriverCs.Core\MySqlDriverCs.Core.csproj", "{8F50C7E0-6FA2-4B4D-8273-4891B5885B25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlDriverCs.Core.Tests", "src\MySqlDriverCs.Core.Tests\MySqlDriverCs.Core.Tests.csproj", "{794F18F6-52C8-49BB-87C8-7DA37791DF9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8F50C7E0-6FA2-4B4D-8273-4891B5885B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F50C7E0-6FA2-4B4D-8273-4891B5885B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F50C7E0-6FA2-4B4D-8273-4891B5885B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F50C7E0-6FA2-4B4D-8273-4891B5885B25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{794F18F6-52C8-49BB-87C8-7DA37791DF9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{794F18F6-52C8-49BB-87C8-7DA37791DF9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{794F18F6-52C8-49BB-87C8-7DA37791DF9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{794F18F6-52C8-49BB-87C8-7DA37791DF9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D80537D5-59D1-46B7-BF62-83A8D39B9C53}
+	EndGlobalSection
+EndGlobal

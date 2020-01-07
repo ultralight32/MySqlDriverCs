@@ -1,0 +1,13 @@
+FROM mysql
+#RUN apt update -y &&\
+#	apt install -y build-essential
+#	
+#RUN apt-get -y update &&\
+#    apt-get -y upgrade &&\
+#	apt-get install -y --force-yes libc6-dev &&\
+#	apt-get install -y --force-yes mysql-client &&\
+#	apt-get install -y --force-yes libmysqlclient-dev &&\
+#	apt-get clean
+
+	
+	

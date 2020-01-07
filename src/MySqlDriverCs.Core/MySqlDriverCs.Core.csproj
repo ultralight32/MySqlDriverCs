@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>4</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <Description>A simple ADO.NET compliant MySQL driver using native driver</Description>
+    <Company>Manuel Lucas Viñas Livschitz</Company>
+    <Product>MySQLDriverCS</Product>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RootNamespace>MySqlDriverCs</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Interop\NativeMethods.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLCommand.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="MySQLConnection.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="MySQLConnectionString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLDataAdapter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="MySQLDataReader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLDeleteCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLInsertCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLParameter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLParameterCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLSelectCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLTransaction.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLUpdateCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MySQLUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+</Project>
