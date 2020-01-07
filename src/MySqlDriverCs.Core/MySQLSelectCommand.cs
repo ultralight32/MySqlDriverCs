@@ -346,7 +346,7 @@ namespace MySQLDriverCS
 				while(reader.Read())
 				{
 					if(reader.IsClosed)
-						throw new MySQLException("Reader is closed.");
+						throw new MySqlException("Reader is closed.");
 					DataRow row = table.NewRow();
 					// Bugfixed by Yann Sénécheau 2002-10-28 ->
 //					for(n=0;n<Fields.Length;n++)
@@ -374,7 +374,7 @@ namespace MySQLDriverCS
 			}
 			catch(Exception e)
 			{
-				throw new MySQLException(e.Message+" in query '"+query+"'");
+				throw new MySqlException(e.Message+" in query '"+query+"'");
 			}
 			finally
 			{

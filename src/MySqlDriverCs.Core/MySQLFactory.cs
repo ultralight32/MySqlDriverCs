@@ -6,6 +6,7 @@
 //CreateConnectionString implemented
  */
 using System.Data.Common;
+using MySqlDriverCs;
 
 namespace MySQLDriverCS
 {

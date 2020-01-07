@@ -54,7 +54,7 @@ namespace MySQLDriverCS
                     cmd = new MySQLCommand("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE", conn);
 					break;
 				case IsolationLevel.Chaos:
-					throw new MySQLException("MySQLDriverCS Error: Chaos isolation level is not implemented in MySQL.");
+					throw new MySqlException("MySQLDriverCS Error: Chaos isolation level is not implemented in MySQL.");
 					
 			}
 

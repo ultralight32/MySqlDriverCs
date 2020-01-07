@@ -289,15 +289,16 @@ namespace MySQLDriverCS
 		/// Gets or sets the maximum number of digits used to represent the Value property.
 		/// </summary>
 
-		public byte Precision
+		public override byte Precision
 		{
 			get { return m_precision; }
 			set { m_precision = value; }
 		}
+
 		/// <summary>
 		/// Gets or sets the number of decimal places to which Value is resolved.
 		/// </summary>
-		public byte Scale
+		public override byte Scale
 		{
 			get { return m_scale; }
 			set { m_scale = value; }

@@ -1,23 +1,14 @@
 using MySQLDriverCS;
 using System;
+using System.Collections;
 using System.Data;
+using System.IO;
+using System.Reflection;
 using MySQLDriverCS.Interop;
 using Xunit;
 
 namespace MySqlDriverCs.Core.Tests
 {
-    public unsafe class NativeDllMustBeFound
-    {
-
-        [Fact]
-        public unsafe void Test()
-        {
-Console.WriteLine("LD_LIBRARY_PATH: "+Environment.GetEnvironmentVariable("LD_LIBRARY_PATH"));
-
-            Native native = new Native();
-            var ptr = Native.mysql_init(null);
-        }
-    }
     public class PreparedStatementVsSqlInjection
     {
         private const int count = 10;
@@ -30,7 +21,14 @@ Console.WriteLine("LD_LIBRARY_PATH: "+Environment.GetEnvironmentVariable("LD_LIB
             long t1, t2, t3, t4, t5, t6;
             int affectedRows;
 
-            MySQLConnection con = new MySQLConnection("Data Source=mysql;Location=localhost;User ID=root;Password=Root-99");
+            //foreach (DictionaryEntry environmentVariable in Environment.GetEnvironmentVariables())
+            //{
+            //    if(environmentVariable.Value!=null)
+            //   Console.WriteLine(environmentVariable.Key.ToString()+"="+environmentVariable.Value.ToString());
+            //}
+
+            // "Data Source=mysql;Location=localhost;User ID=root;Password=Root-99"
+            MySQLConnection con = new MySQLConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
             bool usenew = usePrepared, useold = !usePrepared;
 
             this.CreateTable(con);

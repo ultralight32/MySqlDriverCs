@@ -43,13 +43,13 @@ namespace MySQLDriverCS
 		/// <returns>The quoted escaped string</returns>
 		/// Modified by Chris Palowitch (chrispalo@bellsouth.net)
 		/// utilizing StringBuilder for acceptable performance with large data
-		internal static unsafe string Escape(string str, MySQLConnection conn)
+		internal static string Escape(string str, MySQLConnection conn)
 		{
 			byte[] bytes = conn.CharacterEncoding.GetBytes(str);
 			StringBuilder to = new StringBuilder(bytes.Length * 2 + 1);
 			StringBuilder result = new StringBuilder(bytes.Length * 2 + 1);
 			result.Append('\'');
-			NativeMethods.mysql_real_escape_string(conn.Handle, to, str, (uint)bytes.Length);
+			conn.NativeConnection.mysql_real_escape_string(to, str, (uint)bytes.Length);
 			result.Append(to);
 			result.Append('\'');
 			return result.ToString();

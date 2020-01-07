@@ -112,9 +112,9 @@ namespace MySQLDriverCS
 			)
 		{
 			if(FieldsAndValues==null)
-				throw new MySQLException("FieldsAndValues is null.");
+				throw new MySqlException("FieldsAndValues is null.");
 			if(FieldsAndValues.GetLength(0)==0)
-				throw new MySQLException("FieldsAndValues is empty.");
+				throw new MySqlException("FieldsAndValues is empty.");
 			string query = "update "+conn.Database+"."+Table+" set ";
 			ArrayList NewValues = new ArrayList();
 			for(int m=0; m<FieldsAndValues.GetLength(0); m++)
@@ -163,7 +163,7 @@ namespace MySQLDriverCS
 			}
 			catch(Exception e)
 			{
-				throw new MySQLException(e.Message+" in query '"+query+"'");
+				throw new MySqlException(e.Message+" in query '"+query+"'");
 			}
 			// <- Execute query
 			command.Dispose();

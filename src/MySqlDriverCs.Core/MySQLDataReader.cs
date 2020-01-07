@@ -40,7 +40,9 @@ namespace MySQLDriverCS
 	/// This class is IDataReader compliant so take a look into MSDN help to understand how it works
 	/// </summary>
 	public class MySQLDataReader : DbDataReader
-	{
+    {
+        private NativeResult nativeResult;
+
 		internal DataTable dt;
 		// Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
 		// In order support CommandBehavior.CloseConnection 
@@ -55,8 +57,9 @@ namespace MySQLDriverCS
 		internal MySQLDataReader() { }
 		// Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
 		// In order support CommandBehavior.CloseConnection
-		internal unsafe MySQLDataReader(void* result, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
+		internal unsafe MySQLDataReader(IntPtr resultPtr, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
 		{
+            nativeResult= new NativeResult(resultPtr);
 			// Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
 			// Save if close connection after close MySQLDataReader
 			m_CloseConnection = CloseConnection;
@@ -64,18 +67,18 @@ namespace MySQLDriverCS
 			connection = _connection;
 			dt = new DataTable();
 			uint i; ulong j;
-			uint num_fields = NativeMethods.mysql_num_fields(result);
-			ulong num_rows = NativeMethods.mysql_num_rows(result);
+			uint num_fields = nativeResult.mysql_num_fields();
+			ulong num_rows = nativeResult.mysql_num_rows();
 			for (i = 0; i < num_fields; i++)
 			{
-				IMySqlField field = MYSQL_FIELD_FACTORY.GetInstance();
+				IMySqlField field = new MYSQL_FIELD_FACTORY(_connection.NativeConnection).GetInstance();
 				IntPtr ptr;
-				ptr = NativeMethods.mysql_fetch_field_direct(result, i);
+				ptr = nativeResult.mysql_fetch_field_direct( i);
 				Marshal.PtrToStructure(ptr, field);
 
 				dt.Columns.Add(field.Name);
 
-				Type ftype = MYSQL_FIELD_FACTORY.MysqltoNetType(field.Type);
+				Type ftype = new MYSQL_FIELD_FACTORY(_connection.NativeConnection).MysqltoNetType(field.Type);
 				if (ftype != null)
 				{
 					dt.Columns[field.Name].DataType = ftype;
@@ -85,22 +88,7 @@ namespace MySQLDriverCS
 					}
 				}
 			}
-			/*
-				MYSQL_ROW row;
-				unsigned int num_fields;
-				unsigned int i;
-				num_fields = mysql_num_fields(result);
-				while ((row = mysql_fetch_row(result)))
-				{
-				unsigned long *lengths;
-				lengths = mysql_fetch_lengths(result);
-				for(i = 0; i < num_fields; i++)
-				{
-				printf("[%.*s] ", (int) lengths[i], row[i] ? row[i] : "NULL");
-				}
-				printf("\n");
-				}			 
-			 */
+		
 			for (j = 0; j < num_rows; j++)
 			{
 				lock (_stmt)
@@ -108,16 +96,16 @@ namespace MySQLDriverCS
 					if (_stmt.TryToCancel) break;
 				}
 				//string[] row = null;
-				IntPtr myrow = NativeMethods.mysql_fetch_row(result);
+				IntPtr myrow = nativeResult.mysql_fetch_row();
 				if (myrow.ToPointer() == null)
 				{
-					throw new MySQLException("MySQLDriverCS Error: " + NativeMethods.mysql_error(this.connection.handle));
+					throw new MySqlException(_connection.NativeConnection);
 				}
 				DataRow dr = dt.NewRow();
 
 				/* for BLOB support
 				 * "Christophe Ravier" <c.ravier@laposte.net> 2003-11-27*/
-				UInt32* lengths = NativeMethods.mysql_fetch_lengths(result);
+				var lengths = nativeResult.mysql_fetch_lengths((int)num_fields);
 
 				for (i = 0; i < num_fields; i++)
 				{
@@ -139,6 +127,7 @@ namespace MySQLDriverCS
 						if (Marshal.PtrToStringAnsi(ptr) != null)
 						{
 							int length = (int)lengths[i];
+
 							val = new byte[length];
 							Marshal.Copy(ptr, val, 0, length);
 						}
@@ -259,9 +248,18 @@ namespace MySQLDriverCS
 		/// </summary>
 		public override void Close()
 		{
+            if (nativeResult != null)
+            {
+                nativeResult.Dispose();
+                nativeResult = null;
+            }
+
 			// Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
 			// Close connection if connection is not null and CommandBehavior is CloseConnection
-			if (connection != null && m_CloseConnection) connection.Close();
+			if (connection != null && m_CloseConnection) 
+                connection.Close();
+
+
 
 			if (dt == null) return;
 			_RecordsAffected = dt.Rows.Count;
@@ -314,7 +312,7 @@ namespace MySQLDriverCS
 		{
 			get
 			{
-				if (IsClosed) throw new MySQLException("Reader must be open");
+				if (IsClosed) throw new MySqlException("Reader must be open");
 				return dt.Rows[rowpos][name];
 			}
 		}
@@ -325,7 +323,7 @@ namespace MySQLDriverCS
 		{
 			get
 			{
-				if (IsClosed) throw new MySQLException("Reader must be open");
+				if (IsClosed) throw new MySqlException("Reader must be open");
 				return dt.Rows[rowpos][i];
 			}
 		}
@@ -385,19 +383,19 @@ namespace MySQLDriverCS
 		/// <param name="bufferoffset"></param>
 		/// <param name="length"></param>
 		/// <returns></returns>
-		public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length) { throw new MySQLException("Operation not supported"); }
+		public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length) { throw new MySqlException("Operation not supported"); }
 		/// <summary>
 		/// Unsupported
 		/// </summary>
 		/// <param name="i"></param>
 		/// <returns></returns>
-		protected override DbDataReader GetDbDataReader(int i) { throw new MySQLException("Operation not supported"); }
+		protected override DbDataReader GetDbDataReader(int i) { throw new MySqlException("Operation not supported"); }
 		/// <summary>
 		/// Unsupported
 		/// </summary>
 		/// <param name="i"></param>
 		/// <returns></returns>
-		public override string GetDataTypeName(int i) { throw new MySQLException("Operation not supported"); }
+		public override string GetDataTypeName(int i) { throw new MySqlException("Operation not supported"); }
 		/// <summary>
 		/// Get as DateTime
 		/// </summary>
@@ -435,7 +433,7 @@ namespace MySQLDriverCS
 		/// </summary>
 		/// <param name="i"></param>
 		/// <returns></returns>
-		public override Guid GetGuid(int i) { throw new MySQLException("Operation not supported"); }
+		public override Guid GetGuid(int i) { throw new MySqlException("Operation not supported"); }
 		/// <summary>
 		/// Get as Int16
 		/// </summary>

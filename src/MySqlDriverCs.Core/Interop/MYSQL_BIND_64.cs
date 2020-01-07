@@ -138,7 +138,7 @@ namespace MySQLDriverCS.Interop
                 int add = 0;
                 if (type == typeof(Int64))
                 {
-                    add = NativeMethods.INT64_ADDITIONAL_MEMORY_BUFFER;
+                    add = NativeConnection.INT64_ADDITIONAL_MEMORY_BUFFER;
                 }
                 buffer = Marshal.AllocHGlobal(Marshal.SizeOf(type) + add);
             }

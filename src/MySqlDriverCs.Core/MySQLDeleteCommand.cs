@@ -112,7 +112,7 @@ namespace MySQLDriverCS
 			}
 			catch(Exception e)
 			{
-				throw new MySQLException(e.Message+" in query '"+query+"'");
+				throw new MySqlException(e.Message+" in query '"+query+"'");
 			}
 			// <- Execute query
 			command.Dispose();

@@ -6,18 +6,24 @@ namespace MySQLDriverCS.Interop
     ///   This class is used to get information about client library.
     /// </summary>
     // ReSharper disable once InconsistentNaming
-    public static class MYSQL_FIELD_FACTORY
+    public class MYSQL_FIELD_FACTORY
     {
+        private readonly NativeConnection _nativeConnection;
         static string version;
+
+        internal MYSQL_FIELD_FACTORY(NativeConnection nativeConnection)
+        {
+            _nativeConnection = nativeConnection;
+        }
         /// <summary>
         /// Returns a IMYSQL_FIELD instance according to the client library version.
         /// </summary>
         /// <returns></returns>
-        public static IMySqlField GetInstance()
+        public  IMySqlField GetInstance()
         {
             if (version == null)
             {
-                version = NativeMethods.GetClientVersion();
+                version = _nativeConnection.GetClientVersion();
             }
             if (version.CompareTo("4.1.2-alpha") >= 0)
             {
@@ -34,11 +40,11 @@ namespace MySQLDriverCS.Interop
         /// </summary>
         /// <param name="type">MySQL type</param>
         /// <returns>System Type</returns>
-        public static Type MysqltoNetType(uint type)
+        public  Type MysqltoNetType(uint type)
         {
             if (version == null)
             {
-                version = NativeMethods.GetClientVersion();
+                version = _nativeConnection.GetClientVersion();
             }
 
             if (version.StartsWith("5"))
