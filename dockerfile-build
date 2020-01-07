@@ -1,11 +1,13 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1
 WORKDIR /app
-COPY . .
+COPY MySqlDriverCs.Core.sln .
+RUN mkdir src
+COPY ./src ./src
 
 RUN uname -o
 
 # RUN apt update -y && apt install -y build-essential
-RUN apt update -y
+# RUN apt update -y
 	
 RUN apt-get -y update &&\
     apt-get -y upgrade &&\
@@ -24,7 +26,7 @@ RUN dotnet restore MySqlDriverCs.Core.sln
 # ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu
 # see http://www.bnikolic.co.uk/blog/linux-ld-debug.html
 # ENV LD_DEBUG=libs
-RUN dotnet test ./src/MySqlDriverCs.Core.Tests/MySqlDriverCs.Core.Tests.csproj
+#RUN dotnet test ./src/MySqlDriverCs.Core.Tests/MySqlDriverCs.Core.Tests.csproj
 
 # download port ready script
-RUN curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh > wait_for_it.sh
+#RUN curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh > wait_for_it.sh

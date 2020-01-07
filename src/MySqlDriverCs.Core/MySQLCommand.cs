@@ -267,12 +267,17 @@ namespace MySQLDriverCS
 				{
 					if (connection == null || connection.State != ConnectionState.Open)
 					{
-						throw new MySQLException("Connection must be valid and open.");
+						throw new MySqlException("Connection must be valid and open.");
 					}
 
 					if (usePreparedStatement)
-						pStmt = PreparedStatement.GetInstance(connection, query);
-					else
+                    {
+                        if (MySQLUtils.RunningOn64x)
+                            pStmt = new PreparedStatement64(connection, query);
+                        else
+                            pStmt = new PreparedStatement32(connection, query);
+                    }
+                    else
 						pStmt = new DirectStatement(connection, query);
 				}
 				return pStmt;
@@ -288,7 +293,7 @@ namespace MySQLDriverCS
 		{
 			if (connection == null || connection.State != ConnectionState.Open)
 			{
-				throw new MySQLException("Connection must be valid and open.");
+				throw new MySqlException("Connection must be valid and open.");
 			}
 			Stmt.Parameters = m_parameters;
 			if (CommandType == CommandType.StoredProcedure)
@@ -316,7 +321,7 @@ namespace MySQLDriverCS
 		/// <returns>IDataReader</returns>
 		protected DbDataReader ExecuteReader(bool CloseConnection)
 		{
-			if ((connection == null) || (connection.State == ConnectionState.Closed)) { throw new MySQLException("Connection must be open"); }
+			if ((connection == null) || (connection.State == ConnectionState.Closed)) { throw new MySqlException("Connection must be open"); }
 			Stmt.Parameters = m_parameters;
 			return Stmt.ExecuteReader(CloseConnection);
 		}
@@ -350,18 +355,19 @@ namespace MySQLDriverCS
 		/// </summary>
 		public override object ExecuteScalar()
 		{
-			//throw new MySQLException("Operation not supported");
+	
 			System.Object result = null;
-			System.Data.IDataReader dr;
 
-			// Call to ExecuteReader and not force to close connection after close DataReader
-			dr = ExecuteReader();
+            // Call to ExecuteReader and not force to close connection after close DataReader
+            using (IDataReader dr = ExecuteReader())
+            {
+                if (dr.Read()) 
+                    result = dr.GetValue(0);
 
-			if (dr.Read()) result = dr.GetValue(0);
+                dr.Close();
+            }
 
-			dr.Close();
-
-			return result;
+            return result;
 		}
 		/// <summary>
 		/// Executes the query and loads output parameter values.
@@ -380,11 +386,11 @@ namespace MySQLDriverCS
 		{
 			if (connection == null || connection.State != ConnectionState.Open)
 			{
-				throw new MySQLException("Connection must be valid and open.");
+				throw new MySqlException("Connection must be valid and open.");
 			}
 			if (query == null)
 			{
-				throw new MySQLException("Invalid query.");
+				throw new MySqlException("Invalid query.");
 			}
 
 			Stmt.Prepare();

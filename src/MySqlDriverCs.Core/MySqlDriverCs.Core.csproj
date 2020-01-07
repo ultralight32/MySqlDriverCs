@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Interop\NativeMethods.cs">
+    <Compile Update="Interop\NativeConnection.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLCommand.cs">
