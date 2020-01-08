@@ -68,11 +68,6 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MySQLDriverCS.csproj">
-      <Name>MySQLDriverCS</Name>
-      <Project>{6AEB881A-22F4-4BDD-8B02-68A995AB94BA}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
