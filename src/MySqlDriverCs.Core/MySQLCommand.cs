@@ -58,13 +58,10 @@ namespace MySQLDriverCS
 		private MySQLConnection connection = null;
 		internal DbTransaction _Transaction = null;
 		internal Statement pStmt;
-		private bool usePreparedStatement = false;
-		private string query;
-		private CommandType cmdType = CommandType.Text;
+        private string _query;
 
-		//Add by William Reinoso and Omar del Valle in order soport Parameter Property 
-		UpdateRowSource m_updatedRowSource = UpdateRowSource.None;
-		MySQLParameterCollection m_parameters = new MySQLParameterCollection();
+        //Add by William Reinoso and Omar del Valle in order soport Parameter Property 
+        MySQLParameterCollection m_parameters = new MySQLParameterCollection();
 
 		/// <summary>Initializes a new instance of the MySQLCommand class.</summary>
 		public MySQLCommand()
@@ -74,15 +71,15 @@ namespace MySQLDriverCS
 		/// <param name="cmdText"></param>
 		public MySQLCommand(string cmdText)
 		{
-			query = cmdText;
+			_query = cmdText;
 		}
 		/// <summary>Initializes a new instance of the MySQLCommand class with the text of the query and a MySQLConnection.</summary>
 		/// <param name="cmdText"></param>
-		/// <param name="_connection"></param>
-		public MySQLCommand(string cmdText, MySQLConnection _connection)
+		/// <param name="connection"></param>
+		public MySQLCommand(string cmdText, MySQLConnection connection)
 		{
-			query = cmdText;
-			connection = _connection;
+			_query = cmdText;
+			this.connection = connection;
 		}
 		/// <summary>Initializes a new instance of the MySQLCommand class with the text of the query, a MySQLConnection, and the IDbTransaction. 
 		/// </summary>
@@ -101,37 +98,41 @@ namespace MySQLDriverCS
 		/// <param name="usePreparedStatement"></param>
 		public MySQLCommand(string cmdText, MySQLConnection connection, DbTransaction transaction, bool usePreparedStatement) : this(cmdText, connection, transaction)
 		{
-			this.usePreparedStatement = usePreparedStatement;
+			this.UsePreparedStatement = usePreparedStatement;
 		}
 		/// <summary>
 		/// 
 		/// </summary>
 		public override bool DesignTimeVisible
 		{
-			get { return false; }
-			set { }
+			get => false;
+            set { }
 		}
 
 		/// <summary>
 		/// Gets or sets the text command to run against the data source.
 		/// </summary>
-		public override string CommandText { get { return query; } set { query = value; } }
+		public override string CommandText { get => _query;
+            set => _query = value;
+        }
 		/// <summary>
 		/// Gets or sets the wait time before terminating the attempt to execute a command and generating an error.
 		/// Set Is unsupported.
 		/// </summary>
-		public override int CommandTimeout { get { return 60; } set { } }
+		public override int CommandTimeout { get => 60;
+            set { } }
 		/// <summary>
 		/// Indicates or specifies how the CommandText property is interpreted.
 		/// </summary>
-		public override CommandType CommandType { get { return cmdType; } set { cmdType = value; } }
-		/// <summary>
+		public override CommandType CommandType { get; set; } = CommandType.Text;
+
+        /// <summary>
 		/// Gets or sets the IDbConnection used by this instance of the IDbCommand.
 		/// </summary>
 		protected override DbConnection DbConnection
 		{
-			get { return connection; }
-			set
+			get => connection;
+            set
 			{
 				connection = (MySQLConnection)value;
 				if (pStmt != null) pStmt.connection = connection;
@@ -140,34 +141,27 @@ namespace MySQLDriverCS
 		/// <summary>
 		/// Return a MySQLParameterCollection.
 		/// </summary>
-		public new MySQLParameterCollection Parameters
-		{
-			get { return m_parameters; }
-		}
-		/// <summary>
+		public new MySQLParameterCollection Parameters => m_parameters;
+
+        /// <summary>
 		/// Inherited from IDbCommand 
 		/// </summary>
 		/// <remarks>Add by William Reinoso and Omar del Valle Rodríguez in order suport Parameter property</remarks>
-		protected override DbParameterCollection DbParameterCollection
-		{
-			get { return m_parameters; }
-		}
+		protected override DbParameterCollection DbParameterCollection => m_parameters;
 
-		/// <summary>
+        /// <summary>
 		/// Sets and gets transaction
 		/// </summary>
-		protected override DbTransaction DbTransaction { get { return _Transaction; } set { _Transaction = value; } }
+		protected override DbTransaction DbTransaction { get => _Transaction;
+            set => _Transaction = value;
+        }
 
 		/// <summary>
 		/// UpdateRowSource
 		/// </summary>
-		public override UpdateRowSource UpdatedRowSource
-		{
-			get { return m_updatedRowSource; }
-			set { m_updatedRowSource = value; }
-		}
+		public override UpdateRowSource UpdatedRowSource { get; set; } = UpdateRowSource.None;
 
-		/// <summary>
+        /// <summary>
 		/// Multithreding operation: cancels current reading.
 		/// </summary>
 		public override void Cancel()
@@ -213,9 +207,9 @@ namespace MySQLDriverCS
 			{
 				if (value)
 				{
-					if (!usePreparedStatement)
+					if (!UsePreparedStatement)
 					{
-						usePreparedStatement = true;
+						UsePreparedStatement = true;
 					}
 					Stmt.CursorType = (uint)CursorTypes.CURSOR_TYPE_READ_ONLY;
 				}
@@ -229,9 +223,9 @@ namespace MySQLDriverCS
 		{
 			set
 			{
-				if (!usePreparedStatement)
+				if (!UsePreparedStatement)
 				{
-					usePreparedStatement = true;
+					UsePreparedStatement = true;
 				}
 				Stmt.FetchSize = value;
 			}
@@ -254,12 +248,9 @@ namespace MySQLDriverCS
 		/// SET, UPDATE, and most SHOW statements. Other statements are not supported in MySQL 5.0. 
 		/// </summary>
 		/// <remarks>Use parameter markers ('?') for PreparedStatements instead of named parameters</remarks>
-		public bool UsePreparedStatement
-		{
-			get { return usePreparedStatement; }
-			set { usePreparedStatement = value; }
-		}
-		private Statement Stmt
+		public bool UsePreparedStatement { get; set; } = false;
+
+        private Statement Stmt
 		{
 			get
 			{
@@ -270,15 +261,15 @@ namespace MySQLDriverCS
 						throw new MySqlException("Connection must be valid and open.");
 					}
 
-					if (usePreparedStatement)
+					if (UsePreparedStatement)
                     {
                         if (MySQLUtils.RunningOn64x)
-                            pStmt = new PreparedStatement64(connection, query);
+                            pStmt = new PreparedStatement64(connection, _query);
                         else
-                            pStmt = new PreparedStatement32(connection, query);
+                            pStmt = new PreparedStatement32(connection, _query);
                     }
                     else
-						pStmt = new DirectStatement(connection, query);
+						pStmt = new DirectStatement(connection, _query);
 				}
 				return pStmt;
 			}
@@ -388,14 +379,14 @@ namespace MySQLDriverCS
 			{
 				throw new MySqlException("Connection must be valid and open.");
 			}
-			if (query == null)
+			if (_query == null)
 			{
 				throw new MySqlException("Invalid query.");
 			}
 
 			Stmt.Prepare();
 		}
-		private bool bDisposed = false;
+		private bool _disposed = false;
 		/// <summary>
 		/// Dispose command
 		/// Modified by Claudia Murialdo (05/18/06) in order to allow disposing
@@ -403,11 +394,11 @@ namespace MySQLDriverCS
 		/// </summary>
 		public new void Dispose()
 		{
-			if (bDisposed) return;
+			if (_disposed) return;
 			Stmt.Dispose();
 			_Transaction = null;
 			connection = null;
-			bDisposed = true;
+			_disposed = true;
 		}
 		/// <summary>
 		/// 

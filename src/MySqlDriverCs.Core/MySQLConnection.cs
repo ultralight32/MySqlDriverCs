@@ -1,4 +1,3 @@
-#region LICENSE
 /*
 	MySQLDriverCS: An C# driver for MySQL.
 	Copyright (c) 2002 Manuel Lucas Viñas Livschitz.
@@ -19,7 +18,6 @@
     along with MySQLDriverCS; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#endregion
 
 // BEGIN ADDITION : Compression and Timeout
 //
@@ -68,20 +66,21 @@ Dim req As New MySQLDriverCS.MySQLCommand
 // END ADDITION
 
 using System;
+using System.Collections.Specialized;
 using System.Data;
 using System.Data.Common;
 using System.Text;
 using MySQLDriverCS.Interop;
 
-//using MySQLDriverCPPProxy;
+
 namespace MySQLDriverCS
 {
+
     /// <summary>
     /// This class is IDbConnection compliant so take a look into MSDN help to understand how it works. 
     /// </summary>
     /// <remarks>All members are supported now (2002-10-28)</remarks>
     /// 
-
     public class MySQLConnection : DbConnection
     {
         // BEGIN ADDITION 2004-07-01 adding timeout and compression		
@@ -96,7 +95,6 @@ namespace MySQLDriverCS
         internal string dbname = null;
         internal Encoding encoding = Encoding.Default;
 
-        #region Constructors & Destructor
         /// <summary>
         /// Creates a connection
         /// </summary>
@@ -121,8 +119,7 @@ namespace MySQLDriverCS
             this.Close();
             bDisposed = true;
         }
-        #endregion
-        #region ConnectionString property
+
         /// <summary>
         /// Gets or sets the string used to open a database.
         /// </summary>
@@ -139,8 +136,6 @@ namespace MySQLDriverCS
             get { return encoding; }
         }
 
-        #endregion
-        #region Port property
         /// <summary>
         /// Gets the time to wait while trying to establish a connection before terminating the attempt and generating an error.
         /// </summary>
@@ -155,7 +150,6 @@ namespace MySQLDriverCS
                     return Convert.ToInt32(val);
             }
         }
-        #endregion
 
         /// <summary>
         /// 
@@ -165,7 +159,13 @@ namespace MySQLDriverCS
             get { throw new Exception("The method or operation is not implemented."); }
         }
 
-        #region ConnectionTimeout property
+        private INativeTracer _nativeTracer;
+
+        public void SetNativeTracer(INativeTracer nativeTracer)
+        {
+            _nativeTracer = nativeTracer;
+        }
+
         /// <summary>
         /// Gets the time to wait while trying to establish a connection before terminating the attempt and generating an error.
         /// </summary>
@@ -180,7 +180,7 @@ namespace MySQLDriverCS
                     return Convert.ToInt32(val);
             }
         }
-        #endregion
+
         /// <summary>
         /// 
         /// </summary>
@@ -189,7 +189,6 @@ namespace MySQLDriverCS
             get { return Database; }
         }
 
-        #region Database property
         /// <summary>
         /// Gets the name of the current database or the database to be used once a connection is open.
         /// </summary>
@@ -203,8 +202,7 @@ namespace MySQLDriverCS
                     return FindValueInCS("Data Source=");
             }
         }
-        #endregion
-        #region FindValueInCS
+
         private string FindValueInCS(string keyword)
         {
             keyword = keyword.ToLower();
@@ -228,8 +226,7 @@ namespace MySQLDriverCS
                 }
             }
         }
-        #endregion
-        #region State property
+
         /// <summary>
         /// Gets the current state of the connection.
         /// </summary>
@@ -243,8 +240,7 @@ namespace MySQLDriverCS
                     return ConnectionState.Open;
             }
         }
-        #endregion
-        #region BeginTransaction(IsolationLevel il)
+
         /// <summary>
         /// Begins a transaction
         /// </summary>
@@ -255,9 +251,6 @@ namespace MySQLDriverCS
             return new MySQLTransaction(this, il);
         }
 
-        #endregion
-
-        #region ChangeDatabase
         /// <summary>
         /// Changes database
         /// </summary>
@@ -271,8 +264,7 @@ namespace MySQLDriverCS
                 throw new MySqlException("MySQLDriverCS Error: change database failed, perhaps user is not authorized to access that database." + NativeConnection.mysql_error());
             }
         }
-        #endregion
-        #region CreateCommand 
+
         /// <summary>
         /// Creates an empty command linked to this connection
         /// </summary>
@@ -281,10 +273,9 @@ namespace MySQLDriverCS
         {
             return new MySQLCommand("", this);
         }
-        #endregion
 
         internal NativeConnection NativeConnection = null;
-        #region Open
+
         /// <summary>
         /// Opens a database connection with the settings specified by the ConnectionString property of the provider-specific Connection object.
         /// </summary>
@@ -301,42 +292,37 @@ namespace MySQLDriverCS
             // BEGIN ADDITION 2004-07-01 by Alex Seewald
             string strtimeout = this.FindValueInCS("Timeout=");
             uint timeout = strtimeout != "" ? uint.Parse(strtimeout) : 0;
-            bool activate_compression = (this.FindValueInCS("Compression=") != ""); // will default to false if omitted
-
-            if (timeout == 0)
-                timeout = 100;  // 100 seconds timeout by default, changed in 2004-07-24 by M.L. Viñas Livschitz in favor of connection pooling
-                                // END ADDITION 2004-07-01 by Alex Seewald
+            bool activateCompression = (this.FindValueInCS("Compression=") != ""); // will default to false if omitted
 
             if (port == "")
                 port = "3306";
 
-
-            // HACK/TODO: to remove
             if (NativeConnection == null)
-                NativeConnection = new NativeConnection(clientPath);
+                NativeConnection = new NativeConnection(clientPath, _nativeTracer);
             else
                 throw new MySqlException("Connection already open");
 
 
-
-
-            // BEGIN ADDITION 2004-07-01 adding timeout and compression
             // mysql_options must be called after mysql_init and before mysql_real_connect
 
             // Timeout option
-            NativeConnection.MySqlOptions(0, ref timeout);
+            if (timeout != 0)
+                NativeConnection.mysql_options(0, ref timeout);
 
             // Compression option
             uint _null = 0;
-            if (activate_compression)
-                NativeConnection.MySqlOptions(0, ref _null);
+            if (activateCompression)
+                NativeConnection.mysql_options(0, ref _null);
+
+            // Change autentication method
+            //var rv= NativeConnection.mysql_options(mysql_option.MYSQL_DEFAULT_AUTH, "mysql_native_password");
 
             // END ADDITION 2004-07-01
 
-            var retval = NativeConnection.MySqlRealConnect(location, userid, password, database, Convert.ToUInt32(port), null, 0);
+            var retval = NativeConnection.mysql_real_connect(location, userid, password, database, Convert.ToUInt32(port), null, 0);
             /* Explicit error conection:
 			 * "Christophe Ravier" <c.ravier@laposte.net> 2003-11-27*/
-            if (retval == null)
+            if (retval == IntPtr.Zero)
             {
                 throw new MySqlException(NativeConnection);
             }
@@ -355,9 +341,12 @@ namespace MySQLDriverCS
                 string version = NativeConnection.GetClientVersion();
                 throw new MySqlException(NativeConnection, "'Character Set' keyword not supported in client version " + version);
             }
+
+#if DEBUG
+            NativeConnection.mysql_ping();
+#endif
         }
-        #endregion
-        #region Close
+
         /// <summary>
         /// Closes the connection to the database.
         /// </summary>
@@ -367,7 +356,6 @@ namespace MySQLDriverCS
             NativeConnection.Dispose();
             NativeConnection = null;
         }
-        #endregion
 
         /// <summary>
         /// 
