@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using MySQLDriverCS.Interop;
@@ -186,12 +187,14 @@ namespace MySQLDriverCS
             return 0;
         }
 
-        internal override DbDataReader ExecuteReader(bool CloseConnection)
+        internal override DbDataReader ExecuteReader(bool closeConnection)
         {
             bTryToCancel = false;
             repQuery = BindParameters();
 
-            if (connection.NativeConnection.mysql_query(repQuery) != 0)
+
+
+            if (connection.NativeConnection.mysql_query(repQuery) != 0) // real query instead
             {
                 // error
                 throw new MySqlException(connection.NativeConnection);
@@ -206,7 +209,7 @@ namespace MySQLDriverCS
 
                     // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
                     // Don't close connection after close DataReader
-                    MySQLDataReader dr = new MySQLDataReader(result, this.connection, this, CloseConnection);
+                    MySQLDataReader dr = new MySQLDataReader(result, this.connection, this, closeConnection);
                     return dr;
                 }
                 else  // mysql_store_result() returned nothing; should it have?

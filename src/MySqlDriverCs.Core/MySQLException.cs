@@ -21,10 +21,10 @@ namespace MySQLDriverCS
         /// </summary>
         /// <param name="nativeConnection"></param>
         /// <param name="message"></param>
-        public MySqlException(NativeConnection nativeConnection, string message=null)
+        public MySqlException(NativeConnection nativeConnection, string message = null)
         {
             Number = nativeConnection.mysql_errno();
-            Message = (message != null ? message + ": " : "") + nativeConnection.mysql_error();
+            Message = (message != null ? message + ": " : "") + nativeConnection.mysql_error() + " (" + Number + ")";
         }
         /// <summary>
         /// Exception from native statement
@@ -34,7 +34,7 @@ namespace MySQLDriverCS
         public MySqlException(NativeStatement nativeStatement, string message = null)
         {
             Number = nativeStatement.mysql_stmt_errno();
-            Message = (message != null ? message + ": " : "") + nativeStatement.mysql_stmt_error();
+            Message = (message != null ? message + ": " : "") + nativeStatement.mysql_stmt_error() + " (" + Number + ")";
         }
 
         /// <summary>

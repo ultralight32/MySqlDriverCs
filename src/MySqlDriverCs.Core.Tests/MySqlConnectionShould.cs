@@ -4,17 +4,24 @@ using System.Runtime.InteropServices;
 using Microsoft.DotNet.PlatformAbstractions;
 using MySQLDriverCS;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MySqlDriverCs.Core.Tests
 {
     public class MySqlConnectionShould
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public MySqlConnectionShould(ITestOutputHelper  testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
         private static string ConnectionString
         {
             get
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    return "Data Source=mysql;Location=localhost;User ID=root;Password=Root-99;Client Path=C:\\Program Files\\MySQL\\MySQL Connector C 6.1\\lib";
+                    return "Data Source=mysql;Location=localhost;User ID=test;Password=password;Client Path=C:\\Program Files\\MySQL\\MySQL Connector C 6.1\\lib";
                 else
                     return Environment.GetEnvironmentVariable("CONNECTION_STRING");
             }
@@ -50,10 +57,11 @@ namespace MySqlDriverCs.Core.Tests
         {
             using (var c = new MySQLConnection(ConnectionString))
             {
+                c.SetNativeTracer(new LambdaNativeTracer(x=> _testOutputHelper.WriteLine(x)));
     
                 c.Open();
 
-                using (var cmd = new MySQLCommand("select now()", c))
+                using (var cmd = new MySQLCommand("select now();", c))
                 {
                     var time = cmd.ExecuteScalar();
                 }
