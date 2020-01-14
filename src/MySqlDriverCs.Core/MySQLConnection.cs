@@ -70,6 +70,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using MySqlDriverCs.Interop;
 using MySQLDriverCS.Interop;
 
 
@@ -326,6 +327,7 @@ namespace MySQLDriverCS
             {
                 throw new MySqlException(NativeConnection);
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(characterset))

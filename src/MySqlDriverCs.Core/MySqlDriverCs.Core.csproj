@@ -27,6 +27,11 @@
     <Compile Update="Interop\NativeConnection.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Interop\NativeImportsGenerator.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>NativeImportsGenerator.tt</DependentUpon>
+    </Compile>
     <Compile Update="MySQLCommand.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -64,6 +69,17 @@
     <Compile Update="MySQLUtils.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Interop\NativeImportsGenerator.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>NativeImportsGenerator.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>
