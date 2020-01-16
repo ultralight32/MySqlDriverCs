@@ -1,0 +1,4 @@
+FROM mysql/mysql-server
+ENV MYSQL_DATABASE=test
+ENV MYSQL_ROOT_PASSWORD=pass
+ENV MYSQL_USER=user

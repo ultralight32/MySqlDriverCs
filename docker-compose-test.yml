@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: dockerfile-build
     environment:
-      - CONNECTION_STRING=Location=db;Data Source=todosdb;User ID=root;Password=password;Port=3306
+      - CONNECTION_STRING=Location=db;Data Source=todosdb;User ID=user;Password=pass;Port=3307
     entrypoint: dotnet test ./src/MySqlDriverCs.Core.Tests/MySqlDriverCs.Core.Tests.csproj
     depends_on:
       - db
@@ -18,10 +18,10 @@ services:
     #command: mysql -uroot -ppassword -e "ALTER USER root@localhost IDENTIFIED WITH mysql_native_password BY 'password';"
     restart: always
     ports:
-      - 3306:3306
+      - "3307:3306"
     # Start the container with a todosdb, and password as the root users password
     environment: 
       - MYSQL_DATABASE=todosdb
-      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=pass
       - MYSQL_USER=user
       - MYSQL_PASSWORD=pass
