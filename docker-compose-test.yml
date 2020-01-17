@@ -7,14 +7,15 @@ services:
       context: .
       dockerfile: dockerfile-build
     environment:
-      - CONNECTION_STRING=Location=db;Data Source=todosdb;User ID=user;Password=pass;Port=3307
+      - CONNECTION_STRING=Location=host.docker.internal;Data Source=todosdb;User ID=user;Password=pass;Port=3307
     entrypoint: dotnet test ./src/MySqlDriverCs.Core.Tests/MySqlDriverCs.Core.Tests.csproj
     depends_on:
       - db
   db:
-    image: mysql/mysql-server
+    image: mysql
     #command: mysqld --default-authentication-plugin=mysql_native_password --skip-mysqlx
     #entrypoint: ['/entrypoint.sh', '--default-authentication-plugin=mysql_native_password']
+    command: --default-authentication-plugin=mysql_native_password --skip-name-resolve
     #command: mysql -uroot -ppassword -e "ALTER USER root@localhost IDENTIFIED WITH mysql_native_password BY 'password';"
     restart: always
     ports:
@@ -25,3 +26,4 @@ services:
       - MYSQL_ROOT_PASSWORD=pass
       - MYSQL_USER=user
       - MYSQL_PASSWORD=pass
+# rem skip-name-resolve
