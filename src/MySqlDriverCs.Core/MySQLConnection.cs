@@ -66,10 +66,15 @@ Dim req As New MySQLDriverCS.MySQLCommand
 // END ADDITION
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using MySqlDriverCs.Interop;
 using MySQLDriverCS.Interop;
 
 
@@ -159,12 +164,40 @@ namespace MySQLDriverCS
             get { throw new Exception("The method or operation is not implemented."); }
         }
 
-        private INativeTracer _nativeTracer;
+        #region Native tracer
+        private INativeTracer _currentNativeTracer;
+        private static INativeTracer _defaultNativeTracer;
 
         public void SetNativeTracer(INativeTracer nativeTracer)
         {
-            _nativeTracer = nativeTracer;
+            _currentNativeTracer = nativeTracer;
         }
+
+        public static void SetDefaultNativeTracer(INativeTracer nativeTracer)
+        {
+            _defaultNativeTracer = nativeTracer;
+        }
+
+        internal class InternalNativeTracer : INativeTracer
+        {
+            private readonly MySQLConnection _mySqlConnection;
+
+            public InternalNativeTracer(MySQLConnection mySqlConnection)
+            {
+                _mySqlConnection = mySqlConnection;
+            }
+            public void Trace(string line)
+            {
+                GetNativeTracer()?.Trace(line);
+            }
+
+            private INativeTracer GetNativeTracer()
+            {
+                return _mySqlConnection._currentNativeTracer ?? _defaultNativeTracer;
+            }
+        }
+        private INativeTracer NativeTracer => new InternalNativeTracer(this);
+        #endregion
 
         /// <summary>
         /// Gets the time to wait while trying to establish a connection before terminating the attempt and generating an error.
@@ -298,7 +331,7 @@ namespace MySQLDriverCS
                 port = "3306";
 
             if (NativeConnection == null)
-                NativeConnection = new NativeConnection(clientPath, _nativeTracer);
+                NativeConnection = new NativeConnection(clientPath, NativeTracer);
             else
                 throw new MySqlException("Connection already open");
 
@@ -307,12 +340,12 @@ namespace MySQLDriverCS
 
             // Timeout option
             if (timeout != 0)
-                NativeConnection.mysql_options(0, ref timeout);
+                NativeConnection.mysql_options(mysql_option.MYSQL_OPT_CONNECT_TIMEOUT, ref timeout);
 
             // Compression option
             uint _null = 0;
             if (activateCompression)
-                NativeConnection.mysql_options(0, ref _null);
+                NativeConnection.mysql_options(mysql_option.MYSQL_OPT_COMPRESS, ref _null);
 
             // Change autentication method
             //var rv= NativeConnection.mysql_options(mysql_option.MYSQL_DEFAULT_AUTH, "mysql_native_password");
@@ -324,8 +357,48 @@ namespace MySQLDriverCS
 			 * "Christophe Ravier" <c.ravier@laposte.net> 2003-11-27*/
             if (retval == IntPtr.Zero)
             {
-                throw new MySqlException(NativeConnection);
+                var diagnosticInfo = new Dictionary<string, string>();
+
+                diagnosticInfo["Hostname"] = location;
+                diagnosticInfo["Port"] = port;
+                diagnosticInfo["User"] = userid;
+                diagnosticInfo["Database"] = database;
+
+                IPHostEntry entry = null;
+                try
+                {
+                    entry = Dns.GetHostEntry(location);
+                }
+                catch (Exception ex)
+                {
+                    diagnosticInfo["Server IPs"] = ex.Message;
+                }
+                if (entry != null)
+                {
+                    if (entry.AddressList.Any())
+                    {
+                        var ips = string.Join(", ", entry.AddressList.Select(x => x.ToString()));
+                        diagnosticInfo["Server IPs"] = ips;
+
+                        try
+                        {
+                            var c = new TcpClient(location, Convert.ToInt32(port));
+                            c.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            diagnosticInfo["Tcp connection test"] = "Error: " + ex.Message;
+                        }
+                    }
+                    else
+                    {
+                        diagnosticInfo["Server IPs"] = "name resolution failed";
+                    }
+                }
+
+                throw new MySqlException(NativeConnection, string.Join("\n", diagnosticInfo.Select(x => x.Key + ": " + x.Value)));
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(characterset))

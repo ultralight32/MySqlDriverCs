@@ -1,0 +1,19 @@
+# /docker-compose-test.yml
+version: '3'
+
+services:
+  console:
+    image: mysql:8.0
+#    entrypoint: bash /app/wait_for_it.sh db:3306 -t 0 -- dotnet test
+    command: bash
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    ports:
+      - 3307:3306
+  
+    # Start the container with a todosdb, and password as the root users password
+    environment: 
+      - MYSQL_DATABASE=todosdb
+      - MYSQL_ROOT_PASSWORD=password

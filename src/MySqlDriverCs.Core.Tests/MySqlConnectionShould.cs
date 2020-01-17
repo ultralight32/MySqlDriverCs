@@ -10,11 +10,9 @@ namespace MySqlDriverCs.Core.Tests
 {
     public class MySqlConnectionShould
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
         public MySqlConnectionShould(ITestOutputHelper  testOutputHelper)
         {
-            _testOutputHelper = testOutputHelper;
+            MySQLConnection.SetDefaultNativeTracer(new LambdaNativeTracer(x => testOutputHelper.WriteLine(x)));
         }
         private static string ConnectionString
         {
@@ -57,7 +55,7 @@ namespace MySqlDriverCs.Core.Tests
         {
             using (var c = new MySQLConnection(ConnectionString))
             {
-                c.SetNativeTracer(new LambdaNativeTracer(x=> _testOutputHelper.WriteLine(x)));
+
     
                 c.Open();
 

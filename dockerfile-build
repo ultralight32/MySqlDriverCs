@@ -1,32 +1,15 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as netcore_mysql_client
+RUN uname -o
+RUN apt-get -y update &&\
+    apt-get -y upgrade &&\
+	apt-get install -y --force-yes default-libmysqlclient-dev &&\
+	apt-get clean
+
+FROM netcore_mysql_client
 WORKDIR /app
 COPY MySqlDriverCs.Core.sln .
 RUN mkdir src
 COPY ./src ./src
-
-RUN uname -o
-
-# RUN apt update -y && apt install -y build-essential
-# RUN apt update -y
-	
-RUN apt-get -y update &&\
-    apt-get -y upgrade &&\
-#	apt-get install -y --force-yes libc6-dev &&\
-#	apt-get install -y --force-yes mysql-client &&\
-	apt-get install -y --force-yes default-libmysqlclient-dev &&\
-	apt-get clean
-
-
 # restore nugets
 RUN dotnet restore MySqlDriverCs.Core.sln
 
-# RUN ["cp", "/usr/lib/x86_64-linux-gnu/libmysqlclient.so", "."]
-
-# exec test /find -name "libmysql*"
-# ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu
-# see http://www.bnikolic.co.uk/blog/linux-ld-debug.html
-# ENV LD_DEBUG=libs
-#RUN dotnet test ./src/MySqlDriverCs.Core.Tests/MySqlDriverCs.Core.Tests.csproj
-
-# download port ready script
-#RUN curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh > wait_for_it.sh
