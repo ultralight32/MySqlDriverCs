@@ -75,11 +75,11 @@ namespace MySQLDriverCS
                 m_fields[index] = fieldMetadata;
                 m_row[index] = new MYSQL_BIND_32();
 
-                if (fieldMetadata.Type == (uint)FieldTypes5.FIELD_TYPE_BLOB)
+                if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_BLOB)
                 {
-                    fieldMetadata.Max_Length = 1024;
+                    fieldMetadata.MaxLength = 1024;
                 }
-                else if (fieldMetadata.Type == (uint)FieldTypes5.FIELD_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL 
+                else if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL 
                 {
                     fieldMetadata.Type = PreparedStatementBase.DbtoMysqlType(parameters[index].DbType);
                 }
@@ -106,8 +106,8 @@ namespace MySQLDriverCS
                 MYSQL_BIND_32[] newbind = new MYSQL_BIND_32[1];
                 newbind[0] = new MYSQL_BIND_32();
                 IMySqlField ft = new MYSQL_FIELD_FACTORY(_connection.NativeConnection).GetInstance();
-                ft.Type = (uint)FieldTypes5.FIELD_TYPE_BLOB;
-                ft.Max_Length = (uint)length;
+                ft.Type = (uint)enum_field_types.MYSQL_TYPE_BLOB;
+                ft.MaxLength = (uint)length;
                 newbind[0].InitForBind(ft);
 
                 sbyte errorCode = _stmt.mysql_stmt_fetch_column32(newbind, (uint)i, (uint)fieldOffset);

@@ -179,40 +179,40 @@ namespace MySQLDriverCS
 		/// <returns></returns>
 		public static Type MySQLToNetType(uint type)
 		{
-			FieldTypes5 mysql_type = (FieldTypes5)type;
+			enum_field_types mysql_type = (enum_field_types)type;
 			switch (mysql_type)
 			{
-				case FieldTypes5.FIELD_TYPE_BIT: return typeof(ulong);
-				case FieldTypes5.FIELD_TYPE_BLOB: return typeof(sbyte[]);
-				case FieldTypes5.FIELD_TYPE_DATE: return typeof(MYSQL_TIME);
-				case FieldTypes5.FIELD_TYPE_DATETIME: return typeof(MYSQL_TIME);
-				//case FieldTypes5.FIELD_TYPE_DECIMAL: return typeof(sbyte[]); 
-				case FieldTypes5.FIELD_TYPE_DOUBLE: return typeof(Double);
-				//case FieldTypes5.FIELD_TYPE_ENUM: return typeof(uint);
-				case FieldTypes5.FIELD_TYPE_FLOAT: return typeof(Single);
-				//case FieldTypes5.FIELD_TYPE_GEOMETRY: return typeof(long);
-				case FieldTypes5.FIELD_TYPE_INT24: return typeof(int);
-				case FieldTypes5.FIELD_TYPE_LONG: return typeof(int);
-				case FieldTypes5.FIELD_TYPE_LONG_BLOB: return typeof(sbyte[]);
-				case FieldTypes5.FIELD_TYPE_LONGLONG: return typeof(long);
-				case FieldTypes5.FIELD_TYPE_MEDIUM_BLOB: return typeof(sbyte[]);
-				//case FieldTypes5.FIELD_TYPE_NEWDATE: return typeof(long);
-				case FieldTypes5.FIELD_TYPE_NEWDECIMAL: return typeof(string);//sbyte[]);
-				case FieldTypes5.FIELD_TYPE_DECIMAL: return typeof(string);
-				//case FieldTypes5.FIELD_TYPE_NULL: return typeof(long);
-				//case FieldTypes5.FIELD_TYPE_SET: return typeof(long);
-				case FieldTypes5.FIELD_TYPE_SHORT: return typeof(short);
-				case FieldTypes5.FIELD_TYPE_STRING: return typeof(string);//sbyte[]);
-				case FieldTypes5.FIELD_TYPE_TIME: return typeof(MYSQL_TIME);
-				case FieldTypes5.FIELD_TYPE_TIMESTAMP: return typeof(MYSQL_TIME);
-				case FieldTypes5.FIELD_TYPE_TINY: return typeof(byte);
-				case FieldTypes5.FIELD_TYPE_TINY_BLOB: return typeof(sbyte[]);
-				case FieldTypes5.FIELD_TYPE_VAR_STRING: return typeof(string);//sbyte[]);
-				case FieldTypes5.FIELD_TYPE_VARCHAR: return typeof(sbyte[]);
+				case enum_field_types.MYSQL_TYPE_BIT: return typeof(ulong);
+				case enum_field_types.MYSQL_TYPE_BLOB: return typeof(sbyte[]);
+				case enum_field_types.MYSQL_TYPE_DATE: return typeof(MYSQL_TIME);
+				case enum_field_types.MYSQL_TYPE_DATETIME: return typeof(MYSQL_TIME);
+				//case FieldTypes5.MYSQL_TYPE_DECIMAL: return typeof(sbyte[]); 
+				case enum_field_types.MYSQL_TYPE_DOUBLE: return typeof(Double);
+				//case FieldTypes5.MYSQL_TYPE_ENUM: return typeof(uint);
+				case enum_field_types.MYSQL_TYPE_FLOAT: return typeof(Single);
+				//case FieldTypes5.MYSQL_TYPE_GEOMETRY: return typeof(long);
+				case enum_field_types.MYSQL_TYPE_INT24: return typeof(int);
+				case enum_field_types.MYSQL_TYPE_LONG: return typeof(int);
+				case enum_field_types.MYSQL_TYPE_LONG_BLOB: return typeof(sbyte[]);
+				case enum_field_types.MYSQL_TYPE_LONGLONG: return typeof(long);
+				case enum_field_types.MYSQL_TYPE_MEDIUM_BLOB: return typeof(sbyte[]);
+				//case FieldTypes5.MYSQL_TYPE_NEWDATE: return typeof(long);
+				case enum_field_types.MYSQL_TYPE_NEWDECIMAL: return typeof(string);//sbyte[]);
+				case enum_field_types.MYSQL_TYPE_DECIMAL: return typeof(string);
+				//case FieldTypes5.MYSQL_TYPE_NULL: return typeof(long);
+				//case FieldTypes5.MYSQL_TYPE_SET: return typeof(long);
+				case enum_field_types.MYSQL_TYPE_SHORT: return typeof(short);
+				case enum_field_types.MYSQL_TYPE_STRING: return typeof(string);//sbyte[]);
+				case enum_field_types.MYSQL_TYPE_TIME: return typeof(MYSQL_TIME);
+				case enum_field_types.MYSQL_TYPE_TIMESTAMP: return typeof(MYSQL_TIME);
+				case enum_field_types.MYSQL_TYPE_TINY: return typeof(byte);
+				case enum_field_types.MYSQL_TYPE_TINY_BLOB: return typeof(sbyte[]);
+				case enum_field_types.MYSQL_TYPE_VAR_STRING: return typeof(string);//sbyte[]);
+				case enum_field_types.MYSQL_TYPE_VARCHAR: return typeof(sbyte[]);
 				default:
 					Console.WriteLine("Warning MySQLToNetType could not map type: " + type);
 					return typeof(string);
-					//case FieldTypes5.FIELD_TYPE_YEAR: return typeof(long);
+					//case FieldTypes5.MYSQL_TYPE_YEAR: return typeof(long);
 			}
 		}
 	}

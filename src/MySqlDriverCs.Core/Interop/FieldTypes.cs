@@ -8,98 +8,98 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// DECIMAL
         /// </summary>
-        FIELD_TYPE_DECIMAL,
+        MYSQL_TYPE_DECIMAL,
         /// <summary>
         /// TINYINT
         /// </summary>
-        FIELD_TYPE_TINY,
+        MYSQL_TYPE_TINY,
         /// <summary>
         /// SMALLINT
         /// </summary>
-        FIELD_TYPE_SHORT,
+        MYSQL_TYPE_SHORT,
         /// <summary>
         /// LONG
         /// </summary>
-        FIELD_TYPE_LONG,
+        MYSQL_TYPE_LONG,
         /// <summary>
         /// FLOAT
         /// </summary>
-        FIELD_TYPE_FLOAT,
+        MYSQL_TYPE_FLOAT,
         /// <summary>
         /// DOUBLE
         /// </summary>
-        FIELD_TYPE_DOUBLE,
+        MYSQL_TYPE_DOUBLE,
         /// <summary>
         /// NULL
         /// </summary>
-        FIELD_TYPE_NULL,
+        MYSQL_TYPE_NULL,
         /// <summary>
         /// TIMESTAMP
         /// </summary>
-        FIELD_TYPE_TIMESTAMP,
+        MYSQL_TYPE_TIMESTAMP,
         /// <summary>
         /// BIGINT
         /// </summary>
-        FIELD_TYPE_LONGLONG,
+        MYSQL_TYPE_LONGLONG,
         /// <summary>
         /// INT24
         /// </summary>
-        FIELD_TYPE_INT24,
+        MYSQL_TYPE_INT24,
         /// <summary>
         /// DATE
         /// </summary>
-        FIELD_TYPE_DATE,
+        MYSQL_TYPE_DATE,
         /// <summary>
         /// TIME
         /// </summary>
-        FIELD_TYPE_TIME,
+        MYSQL_TYPE_TIME,
         /// <summary>
         /// DATETIME
         /// </summary>
-        FIELD_TYPE_DATETIME,
+        MYSQL_TYPE_DATETIME,
         /// <summary>
         /// YEAR
         /// </summary>
-        FIELD_TYPE_YEAR,
+        MYSQL_TYPE_YEAR,
         /// <summary>
         /// NEWDATE
         /// </summary>
-        FIELD_TYPE_NEWDATE,
+        MYSQL_TYPE_NEWDATE,
         /// <summary>
         /// ENUM
         /// </summary>
-        FIELD_TYPE_ENUM = 247,
+        MYSQL_TYPE_ENUM = 247,
         /// <summary>
         /// 
         /// </summary>
-        FIELD_TYPE_SET = 248,
+        MYSQL_TYPE_SET = 248,
         /// <summary>
         /// TINYBLOB/TINYTEXT
         /// </summary>
-        FIELD_TYPE_TINY_BLOB = 249,
+        MYSQL_TYPE_TINY_BLOB = 249,
         /// <summary>
         /// 
         /// </summary>
-        FIELD_TYPE_MEDIUM_BLOB = 250,
+        MYSQL_TYPE_MEDIUM_BLOB = 250,
         /// <summary>
         /// 
         /// </summary>
-        FIELD_TYPE_LONG_BLOB = 251,
+        MYSQL_TYPE_LONG_BLOB = 251,
         /// <summary>
         /// 
         /// </summary>
-        FIELD_TYPE_BLOB = 252,
+        MYSQL_TYPE_BLOB = 252,
         /// <summary>
         /// VARCHAR/VARBINARY
         /// </summary>
-        FIELD_TYPE_VAR_STRING = 253,
+        MYSQL_TYPE_VAR_STRING = 253,
         /// <summary>
         /// CHAR/BINARY
         /// </summary>
-        FIELD_TYPE_STRING = 254,
+        MYSQL_TYPE_STRING = 254,
         /// <summary>
         /// 
         /// </summary>
-        FIELD_TYPE_GEOMETRY = 255
+        MYSQL_TYPE_GEOMETRY = 255
     };
 }

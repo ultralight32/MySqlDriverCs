@@ -108,8 +108,8 @@ namespace MySQLDriverCS.Interop
             }
             else if (type == typeof(sbyte[]) || type == typeof(byte[]))
             {
-                buffer = Marshal.AllocHGlobal((int)fieldMetadata.Max_Length);
-                buffer_length = (uint)fieldMetadata.Max_Length;
+                buffer = Marshal.AllocHGlobal((int)fieldMetadata.MaxLength);
+                buffer_length = (uint)fieldMetadata.MaxLength;
             }
             else
             {
@@ -219,7 +219,7 @@ namespace MySQLDriverCS.Interop
                     int index = string_data.IndexOf('\0');
                     if (index >= 0)
                         string_data = string_data.Substring(0, index);
-                    if (((FieldTypes5)buffer_type) == FieldTypes5.FIELD_TYPE_STRING && string_data.Length < buffer_length)
+                    if (((enum_field_types)buffer_type) == enum_field_types.MYSQL_TYPE_STRING && string_data.Length < buffer_length)
                     {
                         string_data = string_data.PadRight((int)buffer_length);
                     }

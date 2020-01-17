@@ -120,7 +120,7 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Max_Length
         /// </summary>
-        public long Max_Length
+        public long MaxLength
         {
             get { return max_length; }
             set { max_length = (uint)value; }
@@ -133,5 +133,8 @@ namespace MySQLDriverCS.Interop
         {
             get { return length; }
         }
+
+     
+        public MySqlFieldFlags Flags => (MySqlFieldFlags) flags;
     }
 }

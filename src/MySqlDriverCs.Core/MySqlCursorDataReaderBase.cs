@@ -187,7 +187,7 @@ namespace MySQLDriverCS
 			get
 			{
 				if (IsClosed) throw new MySqlException("Reader must be open");
-				if (RowType(i) == (uint)FieldTypes.FIELD_TYPE_BLOB)
+				if (RowType(i) == (uint)FieldTypes.MYSQL_TYPE_BLOB)
 				{
 					return getAllBytes(i);
 				}

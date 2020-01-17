@@ -35,45 +35,45 @@ namespace MySQLDriverCS
                 case DbType.AnsiStringFixedLength:
                 case DbType.StringFixedLength:
                 case DbType.String:
-                    return (uint)FieldTypes5.FIELD_TYPE_STRING;
+                    return (uint)enum_field_types.MYSQL_TYPE_STRING;
                 case DbType.AnsiString:
-                    return (uint)FieldTypes5.FIELD_TYPE_VARCHAR;
+                    return (uint)enum_field_types.MYSQL_TYPE_VARCHAR;
                 case DbType.Binary:
-                    return (uint)FieldTypes5.FIELD_TYPE_BLOB;
+                    return (uint)enum_field_types.MYSQL_TYPE_BLOB;
                 case DbType.Boolean:
-                    return (uint)FieldTypes5.FIELD_TYPE_BIT;
+                    return (uint)enum_field_types.MYSQL_TYPE_BIT;
                 case DbType.Byte:
-                    return (uint)FieldTypes5.FIELD_TYPE_TINY;
+                    return (uint)enum_field_types.MYSQL_TYPE_TINY;
                 /*case DbType.Currency: 
-                    return (uint) FieldTypes5.FIELD_TYPE_MONEY;*/
+                    return (uint) FieldTypes5.MYSQL_TYPE_MONEY;*/
                 case DbType.Date:
-                    return (uint)FieldTypes5.FIELD_TYPE_DATE;
+                    return (uint)enum_field_types.MYSQL_TYPE_DATE;
                 case DbType.DateTime:
-                    return (uint)FieldTypes5.FIELD_TYPE_DATETIME;
+                    return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
                 case DbType.DateTime2:
-                    return (uint)FieldTypes5.FIELD_TYPE_DATETIME;
+                    return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
                 case DbType.Decimal:
-                    return (uint)FieldTypes5.FIELD_TYPE_DECIMAL;
+                    return (uint)enum_field_types.MYSQL_TYPE_DECIMAL;
                 case DbType.Double:
-                    return (uint)FieldTypes5.FIELD_TYPE_DOUBLE;
+                    return (uint)enum_field_types.MYSQL_TYPE_DOUBLE;
                 /*case DbType.Guid: 
-                    return (uint) FieldTypes5.FIELD_TYPE_DOUBLE;*/
+                    return (uint) FieldTypes5.MYSQL_TYPE_DOUBLE;*/
                 case DbType.Int16:
-                    return (uint)FieldTypes5.FIELD_TYPE_SHORT;
+                    return (uint)enum_field_types.MYSQL_TYPE_SHORT;
                 case DbType.Int32:
-                    return (uint)FieldTypes5.FIELD_TYPE_LONG;
+                    return (uint)enum_field_types.MYSQL_TYPE_LONG;
                 case DbType.Int64:
-                    return (uint)FieldTypes5.FIELD_TYPE_LONGLONG;
+                    return (uint)enum_field_types.MYSQL_TYPE_LONGLONG;
                 /*case DbType.Object: 
-                    return (uint) FieldTypes5.FIELD_TYPE_VARIANT;
+                    return (uint) FieldTypes5.MYSQL_TYPE_VARIANT;
                 case DbType.SByte: 
-                    return (uint) FieldTypes5.FIELD_TYPE_LONGLONG;*/
+                    return (uint) FieldTypes5.MYSQL_TYPE_LONGLONG;*/
                 case DbType.Single:
-                    return (uint)FieldTypes5.FIELD_TYPE_FLOAT;
+                    return (uint)enum_field_types.MYSQL_TYPE_FLOAT;
                 case DbType.Time:
-                    return (uint)FieldTypes5.FIELD_TYPE_TIME;
+                    return (uint)enum_field_types.MYSQL_TYPE_TIME;
                 default:
-                    return (uint)FieldTypes5.FIELD_TYPE_SHORT;
+                    return (uint)enum_field_types.MYSQL_TYPE_SHORT;
 
             }
         }

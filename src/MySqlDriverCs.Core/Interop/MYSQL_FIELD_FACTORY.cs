@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace MySQLDriverCS.Interop
 {
@@ -19,90 +20,94 @@ namespace MySQLDriverCS.Interop
         /// Returns a IMYSQL_FIELD instance according to the client library version.
         /// </summary>
         /// <returns></returns>
-        public  IMySqlField GetInstance()
-        {
-            if (version == null)
-            {
-                version = _nativeConnection.GetClientVersion();
-            }
-            if (version.CompareTo("4.1.2-alpha") >= 0)
-            {
-                if (MySQLUtils.RunningOn64x)
-                    return new MYSQL_FIELD_VERSION_5_64();
-                else
-                    return new MYSQL_FIELD_VERSION_5_32();
-            }
-            else
-                return new MYSQL_FIELD_VERSION_3();
-        }
-        /// <summary>
-        /// Converts a MySQL Type to a System.Type 
-        /// </summary>
-        /// <param name="type">MySQL type</param>
-        /// <returns>System Type</returns>
-        public  Type MysqltoNetType(uint type)
+        public IMySqlField GetInstance()
         {
             if (version == null)
             {
                 version = _nativeConnection.GetClientVersion();
             }
 
-            if (version.StartsWith("5"))
-            {
-                if (type == (uint)FieldTypes5.FIELD_TYPE_BLOB) //252)
-                {
-                    return System.Type.GetType("System.Byte[]");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_SHORT ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_TINY)
-                {
-                    return System.Type.GetType("System.Int16");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_DECIMAL ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_NEWDECIMAL)
-                {
-                    return System.Type.GetType("System.Decimal");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_DOUBLE)
-                {
-                    return System.Type.GetType("System.Double");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_INT24 ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_LONG)
-                {
-                    return System.Type.GetType("System.Int32");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_TIMESTAMP ||//7 )
-                         type == (uint)FieldTypes5.FIELD_TYPE_DATETIME ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_DATE ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_TIME ||
-                         type == (uint)FieldTypes5.FIELD_TYPE_NEWDATE)
-                {
-                    return System.Type.GetType("System.DateTime");
-                }
-                else if (type == (uint)FieldTypes5.FIELD_TYPE_STRING)
-                {
-                    return System.Type.GetType("System.String");
-                }
-            }
+            if (MySQLUtils.RunningOn64x)
+                return new MYSQL_FIELD_VERSION_5_64();
             else
+                return new MYSQL_FIELD_VERSION_5_32();
+
+        }
+
+        /// <summary>
+        /// Converts a MySQL Type to a System.Type 
+        /// </summary>
+        /// <param name="type">MySQL type</param>
+        /// <param name="fieldMetadata"></param>
+        /// <returns>System Type</returns>
+        public Type MysqltoNetType(IMySqlField fieldMetadata)
+        {
+            if (version == null)
             {
-                /* Text, BLOB and DateTime fields management
-				 * "Christophe Ravier" <c.ravier@laposte.net> 2003-11-27*/
-                if (type == (uint)FieldTypes.FIELD_TYPE_BLOB) //252)
-                {
-                    return System.Type.GetType("System.Byte[]");
-                }
-                else if (type == (uint)FieldTypes.FIELD_TYPE_TIMESTAMP ||
-                         type == (uint)FieldTypes.FIELD_TYPE_DATETIME ||
-                         type == (uint)FieldTypes.FIELD_TYPE_DATE ||
-                         type == (uint)FieldTypes.FIELD_TYPE_TIME ||
-                         type == (uint)FieldTypes.FIELD_TYPE_NEWDATE)
-                {
-                    return System.Type.GetType("System.DateTime");
-                }
+                version = _nativeConnection.GetClientVersion();
             }
-            return null;
+
+            var type = fieldMetadata.Type;
+            var unsigned = fieldMetadata.Flags.HasFlag(MySqlFieldFlags.UNSIGNED_FLAG);
+            var len = fieldMetadata.MaxLength;
+
+            switch ((enum_field_types)type)
+            {
+
+                case enum_field_types.MYSQL_TYPE_SHORT:
+                    return unsigned ? typeof(ushort) : typeof(short);
+                case enum_field_types.MYSQL_TYPE_TINY:
+                    if (!unsigned && len == 1)
+                        return typeof(bool);
+                    else
+                        return unsigned ? typeof(byte) : typeof(sbyte);
+                case enum_field_types.MYSQL_TYPE_DECIMAL:
+                case enum_field_types.MYSQL_TYPE_NEWDECIMAL:
+                    return typeof(decimal);
+                case enum_field_types.MYSQL_TYPE_DOUBLE:
+                    return typeof(double);
+                case enum_field_types.MYSQL_TYPE_INT24:
+                case enum_field_types.MYSQL_TYPE_LONG:
+                    return unsigned ? typeof(uint) : typeof(int);
+                case enum_field_types.MYSQL_TYPE_LONGLONG:
+                    return unsigned ? typeof(ulong) : typeof(long);
+                case enum_field_types.MYSQL_TYPE_TIMESTAMP:
+                case enum_field_types.MYSQL_TYPE_TIMESTAMP2:
+                case enum_field_types.MYSQL_TYPE_DATETIME:
+                case enum_field_types.MYSQL_TYPE_DATETIME2:
+                case enum_field_types.MYSQL_TYPE_DATE:
+                case enum_field_types.MYSQL_TYPE_TIME2:
+                case enum_field_types.MYSQL_TYPE_TIME:
+                case enum_field_types.MYSQL_TYPE_NEWDATE:
+                    return typeof(DateTime);
+                case enum_field_types.MYSQL_TYPE_STRING:
+                case enum_field_types.MYSQL_TYPE_VARCHAR:
+                case enum_field_types.MYSQL_TYPE_VAR_STRING:
+                    return typeof(string);
+                case enum_field_types.MYSQL_TYPE_FLOAT:
+                    return typeof(float);
+                case enum_field_types.MYSQL_TYPE_NULL:
+                    return null;
+                case enum_field_types.MYSQL_TYPE_YEAR:
+                    throw new NotSupportedException();
+                case enum_field_types.MYSQL_TYPE_BIT:
+                    return typeof(ulong);
+                case enum_field_types.MYSQL_TYPE_JSON:
+                    throw new NotSupportedException();
+                case enum_field_types.MYSQL_TYPE_ENUM:
+                    throw new NotSupportedException();
+                case enum_field_types.MYSQL_TYPE_SET:
+                    throw new NotSupportedException();
+                case enum_field_types.MYSQL_TYPE_MEDIUM_BLOB:
+                case enum_field_types.MYSQL_TYPE_LONG_BLOB:
+                case enum_field_types.MYSQL_TYPE_TINY_BLOB:
+                case enum_field_types.MYSQL_TYPE_BLOB:
+                    return typeof(byte[]);
+                case enum_field_types.MYSQL_TYPE_GEOMETRY:
+                    throw new NotSupportedException();
+                default:
+                    throw new NotSupportedException();
+            }
         }
     }
 }

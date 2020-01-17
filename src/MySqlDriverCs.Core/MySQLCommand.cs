@@ -317,15 +317,7 @@ namespace MySQLDriverCS
 			return Stmt.ExecuteReader(CloseConnection);
 		}
 
-		/*
-		/// <summary>
-		/// Overloaded. Executes the CommandText against the Connection and builds an IDataReader.
-		/// Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx).
-		/// Not force to close connection after  
-		/// </summary>
-		/// <returns>IDataReader</returns>
-		protected override IDataReader ExecuteDBDataReader(){return ExecuteReader(false);}
-		*/
+		
 
 		/// <summary>
 		/// Overloaded. Executes the CommandText against the Connection and builds an IDataReader.
@@ -346,19 +338,13 @@ namespace MySQLDriverCS
 		/// </summary>
 		public override object ExecuteScalar()
 		{
-	
-			System.Object result = null;
-
-            // Call to ExecuteReader and not force to close connection after close DataReader
             using (IDataReader dr = ExecuteReader())
             {
                 if (dr.Read()) 
-                    result = dr.GetValue(0);
-
-                dr.Close();
+                   return dr.GetValue(0);
             }
 
-            return result;
+            return null;
 		}
 		/// <summary>
 		/// Executes the query and loads output parameter values.
