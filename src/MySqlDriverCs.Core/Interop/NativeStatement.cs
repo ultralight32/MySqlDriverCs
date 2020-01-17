@@ -10,7 +10,7 @@ namespace MySQLDriverCS.Interop
         public NativeStatement(NativeConnection nativeConnection)
         {
             _nativeConnection = nativeConnection;
-            stmt = mysql_stmt_init(_nativeConnection.handle);
+            stmt = mysql_stmt_init(_nativeConnection.MySql);
             if (stmt == IntPtr.Zero)
                 throw new MySqlException(_nativeConnection);
         }

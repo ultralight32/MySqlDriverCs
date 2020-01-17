@@ -6,11 +6,17 @@ using System.IO;
 using System.Reflection;
 using MySQLDriverCS.Interop;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MySqlDriverCs.Core.Tests
 {
     public class PreparedStatementVsSqlInjection
     {
+        public PreparedStatementVsSqlInjection(ITestOutputHelper testOutputHelper)
+        {
+            MySQLConnection.SetDefaultNativeTracer(new LambdaNativeTracer(x => testOutputHelper.WriteLine(x)));
+        }
+
         private const int count = 10;
 
         [Theory]

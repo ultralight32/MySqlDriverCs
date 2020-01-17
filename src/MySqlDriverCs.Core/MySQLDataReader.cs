@@ -2,7 +2,7 @@
 /*
 	MySQLDriverCS: An C# driver for MySQL.
 	Copyright (c) 2002 Manuel Lucas Viñas Livschitz.
-
+-
 	This file is part of MySQLDriverCS.
 
     MySQLDriverCS is free software; you can redistribute it and/or modify

@@ -24,7 +24,8 @@ namespace MySQLDriverCS
         public MySqlException(NativeConnection nativeConnection, string message = null)
         {
             Number = nativeConnection.mysql_errno();
-            Message = (message != null ? message + ": " : "") + nativeConnection.mysql_error() + " (" + Number + ")";
+            Message = nativeConnection.mysql_error() + " (" + Number + ")" + (message != null ? "\nContext:\n" + message : "");
+
         }
         /// <summary>
         /// Exception from native statement
@@ -34,7 +35,7 @@ namespace MySQLDriverCS
         public MySqlException(NativeStatement nativeStatement, string message = null)
         {
             Number = nativeStatement.mysql_stmt_errno();
-            Message = (message != null ? message + ": " : "") + nativeStatement.mysql_stmt_error() + " (" + Number + ")";
+            Message = nativeStatement.mysql_stmt_error() + " (" + Number + ")" + (message != null ? "\nContext:\n" + message : "");
         }
 
         /// <summary>
