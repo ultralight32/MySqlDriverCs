@@ -105,6 +105,51 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
+        [Theory]
+        [ClassData(typeof(CalculatorTestData))]
+        public void ExecuteDataReaderForNumericTypes(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
+        {
+            using (var c = new MySQLConnection(ConnectionString))
+            {
+                c.Open();
+
+                using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                    cmd1.ExecuteNonQuery();
+
+                using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
+                    cmd2.ExecuteNonQuery();
+
+                using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,{insertedLiteral});", c)) cmd3.ExecuteNonQuery();
+
+                using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=0", c))
+                {
+                    var reader = cmd.ExecuteReader();
+                    Assert.True(reader.Read());
+
+                    {
+                        var ordinal = reader.GetOrdinal("COL_VALUE");
+                        var executeScalar = reader.GetValue(ordinal);
+
+                        Assert.NotNull(executeScalar);
+                        if (expectedValue == null)
+                            Assert.Null(executeScalar);
+                        else
+                        {
+                            Assert.NotNull(executeScalar);
+                            Assert.IsType(expectedValue.GetType(), executeScalar);
+                            Assert.Equal(expectedValue, executeScalar);
+                        }
+                    }
+
+                    Assert.False(reader.Read());
+
+
+                }
+            }
+        }
+
+#warning todo test with prepared statements
+
         private static void InsertTableNumberTestType(MySQLConnection c)
         {
             using (var cmd = new MySQLCommand(@"
