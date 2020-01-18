@@ -101,9 +101,9 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// The type of the field. 
         /// </summary>
-        public /*FieldTypes*/ uint type;
+        public  uint type;
 
-        IntPtr extension;
+       
 
         /// <summary>
         /// Name

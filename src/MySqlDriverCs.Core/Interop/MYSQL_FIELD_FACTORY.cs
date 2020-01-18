@@ -24,7 +24,7 @@ namespace MySQLDriverCS.Interop
         {
             if (version == null)
             {
-                version = _nativeConnection.GetClientVersion();
+                version = _nativeConnection.ClientVersion;
             }
 
             if (MySQLUtils.RunningOn64x)
@@ -44,7 +44,7 @@ namespace MySQLDriverCS.Interop
         {
             if (version == null)
             {
-                version = _nativeConnection.GetClientVersion();
+                version = _nativeConnection.ClientVersion;
             }
 
             var type = fieldMetadata.Type;

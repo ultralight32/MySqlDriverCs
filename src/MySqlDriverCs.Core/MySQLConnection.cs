@@ -411,7 +411,7 @@ namespace MySQLDriverCS
             }
             catch (EntryPointNotFoundException)
             {
-                string version = NativeConnection.GetClientVersion();
+                string version = NativeConnection.ClientVersion;
                 throw new MySqlException(NativeConnection, "'Character Set' keyword not supported in client version " + version);
             }
 

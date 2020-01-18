@@ -35,16 +35,14 @@ namespace MySQLDriverCS.Interop
     /// </summary>
     public class NativeConnection : IDisposable
     {
-        private const string LibmysqlDll = "libmysql.dll";
-        private const string LibmysqlclientSo = "libmysqlclient.so";
-        private readonly INativeTracer _nativeTracer;
+     
         private static readonly HashSet<string> Win32PathsAlreadyAdded = new HashSet<string>();
 
         private readonly INativeProxy _nativeProxy;
 
         public NativeConnection(string dllPath, INativeTracer nativeTracer)
         {
-            _nativeTracer = nativeTracer;
+
             _nativeProxy = NativeProxyFactory.GetProxy(nativeTracer);
             if (!string.IsNullOrWhiteSpace(dllPath) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -62,22 +60,27 @@ namespace MySQLDriverCS.Interop
             if (IntPtr.Size == sizeof(int))
                 throw new Exception("32Bit process is not supported");
 
-            if (!_mysql_server_init_called)
+            if (!_mysqlServerInitCalled)
             {
                 int rv = _nativeProxy.mysql_server_init(0, IntPtr.Zero, IntPtr.Zero);
                 if (rv != 0)
                     throw new MySqlException("Could not initialize MySQL client library");
-                _mysql_server_init_called = true;
+                _mysqlServerInitCalled = true;
             }
 
             MySql = _nativeProxy.mysql_init(IntPtr.Zero);
             if (MySql == null)
-                throw new MySqlException("MySQLDriverCS Error: can't create client.");
+                throw new MySqlException("mysql_init failed");
+
+            IntPtr vers = mysql_get_client_info();
+            if (vers == null)
+                throw new MySqlException("mysql_get_client_info failed");
+            ClientVersion = Marshal.PtrToStringAnsi(vers);
         }
 
         internal IntPtr MySql;
 
-        private static bool _mysql_server_init_called = false;
+        private static bool _mysqlServerInitCalled = false;
 
         public int mysql_options(mysql_option option, ref uint value)
         {
@@ -137,28 +140,9 @@ namespace MySQLDriverCS.Interop
             return _nativeProxy.mysql_get_client_info();
         }
 
-        private static string version;
-        private static int CLIENT_6_1_OR_GREATER = -1;
         public static int INT64_ADDITIONAL_MEMORY_BUFFER = 4;
 
-        public bool Client6_1()
-        {
-            if (CLIENT_6_1_OR_GREATER == -1)
-            {
-                CLIENT_6_1_OR_GREATER = GetClientVersion().CompareTo("6.0.0") > 0 ? 1 : 0;
-            }
-            return (CLIENT_6_1_OR_GREATER == 1);
-        }
-
-        public string GetClientVersion()
-        {
-            if (string.IsNullOrEmpty(version))
-            {
-                IntPtr vers = mysql_get_client_info();
-                version = Marshal.PtrToStringAnsi(vers);
-            }
-            return version;
-        }
+        public string ClientVersion { get; }
 
         public int mysql_select_db(string dbname)
         {

@@ -58,7 +58,7 @@ namespace MySQLDriverCS
             m_fieldCount = fieldCount;
 
             IntPtr fields;
-            if (_connection.NativeConnection.Client6_1())
+            if (_connection.NativeConnection.ClientVersion.CompareTo("6.0.0") > 0)
             {
                 MYSQL_STMT_6_1 mysql_stmt = (MYSQL_STMT_6_1)Marshal.PtrToStructure(stmt.stmt, typeof(MYSQL_STMT_6_1));
 
