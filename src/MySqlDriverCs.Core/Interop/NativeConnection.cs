@@ -167,5 +167,10 @@ namespace MySQLDriverCS.Interop
                 MySql = IntPtr.Zero;
             }
         }
+
+        public NativeStatement CreateStatement()
+        {
+            return new NativeStatement(this,_nativeProxy);
+        }
     }
 }

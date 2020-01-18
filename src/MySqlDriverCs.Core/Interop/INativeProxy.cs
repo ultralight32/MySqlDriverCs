@@ -21,5 +21,6 @@ namespace MySqlDriverCs.Interop
         uint mysql_field_count(IntPtr mysql);
         uint mysql_affected_rows(IntPtr mysql);
         IntPtr mysql_get_client_info();
+       // string get_charset_name(uint charset_number);
     }
 }

@@ -15,6 +15,10 @@ namespace MySqlDriverCs.Interop
             _nativeTracer = nativeTracer;
         }
 
+
+       
+
+
         [DllImport(DllName, EntryPoint = "mysql_close")]
         private static extern void mysql_close(IntPtr handle);
 
@@ -74,7 +78,7 @@ namespace MySqlDriverCs.Interop
         IntPtr INativeProxy.mysql_real_connect(IntPtr mysql, string host, string user, string passwd, string db, uint port, string unix_socket, int client_flag)
         {
             _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
-            return mysql_real_connect( mysql,  host,  user,  passwd,  db,  port,  unix_socket,  client_flag);
+            return mysql_real_connect(mysql, host, user, passwd, db, port, unix_socket, client_flag);
         }
 
         [DllImport(DllName, EntryPoint = "mysql_select_db")]
@@ -169,6 +173,10 @@ namespace MySqlDriverCs.Interop
             _nativeTracer = nativeTracer;
         }
 
+
+       
+
+
         [DllImport(DllName, EntryPoint = "mysql_close")]
         private static extern void mysql_close(IntPtr handle);
 
@@ -228,7 +236,7 @@ namespace MySqlDriverCs.Interop
         IntPtr INativeProxy.mysql_real_connect(IntPtr mysql, string host, string user, string passwd, string db, uint port, string unix_socket, int client_flag)
         {
             _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
-            return mysql_real_connect( mysql,  host,  user,  passwd,  db,  port,  unix_socket,  client_flag);
+            return mysql_real_connect(mysql, host, user, passwd, db, port, unix_socket, client_flag);
         }
 
         [DllImport(DllName, EntryPoint = "mysql_select_db")]

@@ -30,7 +30,6 @@ using MySQLDriverCS.Interop;
 using System;
 using System.Data;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace MySQLDriverCS
@@ -42,7 +41,7 @@ namespace MySQLDriverCS
         private readonly NativeStatement _stmt;
 
         private bool m_CloseConnection = false;
-        private IMySqlField[] m_fields;
+        private MYSQL_FIELD[] m_fields;
 
         private MYSQL_BIND[] m_row;
 
@@ -72,16 +71,16 @@ namespace MySQLDriverCS
                 fields = mysql_stmt.result.data;
             }
 
-            m_fields = (IMySqlField[])Array.CreateInstance(new MYSQL_FIELD().GetType(), _fieldCount);
+            m_fields = (MYSQL_FIELD[])Array.CreateInstance(new MYSQL_FIELD().GetType(), _fieldCount);
 
             long pointer = fields.ToInt64();
             int index;
             m_row = new MYSQL_BIND[_fieldCount];
             for (index = 0; index < _fieldCount; index++)
             {
-                IMySqlField fieldMetadata = new MYSQL_FIELD();
+                var fieldMetadata = new MYSQL_FIELD();
                 IntPtr ptr = new IntPtr(pointer);
-                Marshal.PtrToStructure(ptr, fieldMetadata);
+                Marshal.PtrToStructure(ptr, fieldMetadata); // mysql fill out metadata information
                 pointer += Marshal.SizeOf(fieldMetadata);
                 m_fields[index] = fieldMetadata;
                 m_row[index] = new MYSQL_BIND();
@@ -136,14 +135,7 @@ namespace MySQLDriverCS
             get
             {
                 if (IsClosed) throw new MySqlException("Reader must be open");
-                if (RowType(i) == enum_field_types.MYSQL_TYPE_BLOB)
-                {
-                    return GetAllBytes(i);
-                }
-                else
-                {
-                    return RowValue(i);
-                }
+                return m_row[i].GetValue(i,_stmt,m_fields[i]);
             }
         }
 
@@ -228,7 +220,7 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public DateTime GetDateTime(int i)
         {
-            return (DateTime)RowValue(i);
+            return (DateTime)this[i];
         }
 
         /// <inheritdoc />
@@ -346,72 +338,6 @@ namespace MySQLDriverCS
         public bool RowIsNull(int i)
         {
             return m_row[i].IsNull;
-        }
-
-        public enum_field_types RowType(int i)
-        {
-            return m_row[i].Type;
-        }
-
-        public object RowValue(int i)
-        {
-            return m_row[i].Value;
-        }
-
-        private object GetAllBytes(int id)
-        {
-            if (RowIsNull(id))
-            {
-                return DBNull.Value;
-            }
-            else
-            {
-                MemoryStream fs;
-                BinaryWriter bw;
-                int bufferSize = 1024;
-                byte[] outbyte = new byte[bufferSize];
-                long retval;
-                long startIndex = 0;
-                try
-                {
-                    // Reset the starting byte for the new BLOB.
-                    startIndex = 0;
-
-                    retval = GetBytes(id, startIndex, outbyte, 0, bufferSize);
-
-                    if (retval == 0)
-                        return new byte[0];
-
-                    fs = new MemoryStream();
-
-                    bw = new BinaryWriter(fs);
-
-                    // Continue reading and writing while there are bytes beyond the size of the buffer.
-                    while (retval == bufferSize)
-                    {
-                        bw.Write(outbyte);
-                        bw.Flush();
-                        // Reposition the start index to the end of the last buffer and fill the buffer.
-                        startIndex += bufferSize;
-                        retval = GetBytes(id, startIndex, outbyte, 0, bufferSize);
-                    }
-                    if (retval >= 0)
-                    {
-                        // Write the remaining buffer.
-                        bw.Write(outbyte, 0, (int)retval);
-                    }
-                    bw.Flush();
-
-                    // Close the output file.
-                    bw.Close();
-                    fs.Close();
-                }
-                catch (IOException e)
-                {
-                    throw e;
-                }
-                return fs.ToArray();
-            }
         }
     }
 }

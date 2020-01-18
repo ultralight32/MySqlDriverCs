@@ -19,7 +19,7 @@ namespace MySQLDriverCS
 
         public PreparedStatement(MySQLConnection connection, string query)
         {
-            stmt = new NativeStatement(connection.NativeConnection);
+            stmt = connection.NativeConnection.CreateStatement();
             this.connection = connection;
             this.query = query;
 
@@ -216,7 +216,7 @@ namespace MySQLDriverCS
                 m_bindparms[i].Type = param.GetFieldType();
           
 
-                        m_bindparms[i].Value = param.Value;
+                m_bindparms[i].SetValue(param.Value);
                 m_bindparms[i].IsNull = param.Value == null || param.Value == DBNull.Value;
                 if (param.Value != null && param.Value is string)
                 {

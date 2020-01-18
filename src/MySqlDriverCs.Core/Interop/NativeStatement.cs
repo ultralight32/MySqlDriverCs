@@ -1,15 +1,18 @@
 using System;
 using System.Runtime.InteropServices;
+using MySqlDriverCs.Interop;
 
 namespace MySQLDriverCS.Interop
 {
     public class NativeStatement:IDisposable
     {
-        private readonly NativeConnection _nativeConnection;
+        internal readonly NativeConnection _nativeConnection;
         internal IntPtr stmt;
-        public NativeStatement(NativeConnection nativeConnection)
+        private readonly INativeProxy _nativeProxy;
+        public NativeStatement(NativeConnection nativeConnection, INativeProxy nativeProxy)
         {
             _nativeConnection = nativeConnection;
+            _nativeProxy = nativeProxy;
             stmt = mysql_stmt_init(_nativeConnection.MySql);
             if (stmt == IntPtr.Zero)
                 throw new MySqlException(_nativeConnection);
@@ -267,5 +270,7 @@ namespace MySQLDriverCS.Interop
             mysql_stmt_close(stmt);
             stmt=IntPtr.Zero;
         }
+
+       
     }
 }
