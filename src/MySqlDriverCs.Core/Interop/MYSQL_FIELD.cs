@@ -4,11 +4,9 @@ using System.Runtime.InteropServices;
 namespace MySQLDriverCS.Interop
 {
     /// <inheritdoc />
-    /// <summary>
-    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public class MYSQL_FIELD_VERSION_5_64 : IMySqlField
+    public class MYSQL_FIELD : IMySqlField
     {
         /// <summary>
         /// The name of the field. If the field was given an alias with an AS  clause, the value of name is the alias.
@@ -101,8 +99,9 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// The type of the field. 
         /// </summary>
-        public  uint type;
+        public enum_field_types type;
 
+        public IntPtr extension;
        
 
         /// <summary>
@@ -115,9 +114,9 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Type
         /// </summary>
-        public uint Type
+        public enum_field_types Type
         {
-            get { return (uint)type; }
+            get { return type; }
             set { type = value; }
         }
         /// <summary>

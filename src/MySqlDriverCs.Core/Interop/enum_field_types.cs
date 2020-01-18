@@ -3,21 +3,38 @@ using System.Diagnostics.CodeAnalysis;
 namespace MySQLDriverCS.Interop
 {
 
-#pragma warning disable 1591
+
     /// <summary>
     /// Field types
     /// </summary>
     [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>")]
     public enum enum_field_types : uint
     {
-        MYSQL_TYPE_DECIMAL = 0, MYSQL_TYPE_TINY = 1,
-        MYSQL_TYPE_SHORT = 2, MYSQL_TYPE_LONG = 3,
-        MYSQL_TYPE_FLOAT = 4, MYSQL_TYPE_DOUBLE = 5,
-        MYSQL_TYPE_NULL = 6, MYSQL_TYPE_TIMESTAMP = 7,
-        MYSQL_TYPE_LONGLONG = 8, MYSQL_TYPE_INT24 = 9,
-        MYSQL_TYPE_DATE = 10, MYSQL_TYPE_TIME = 11,
-        MYSQL_TYPE_DATETIME = 12, MYSQL_TYPE_YEAR = 13,
-        MYSQL_TYPE_NEWDATE = 14, MYSQL_TYPE_VARCHAR = 15,
+        MYSQL_TYPE_DECIMAL = 0,
+        MYSQL_TYPE_TINY = 1,
+
+        MYSQL_TYPE_SHORT = 2,
+        MYSQL_TYPE_LONG = 3,
+
+        MYSQL_TYPE_FLOAT = 4,
+        MYSQL_TYPE_DOUBLE = 5,
+
+        MYSQL_TYPE_NULL = 6,
+        MYSQL_TYPE_TIMESTAMP = 7,
+
+        MYSQL_TYPE_LONGLONG = 8,
+        MYSQL_TYPE_INT24 = 9,
+
+        MYSQL_TYPE_DATE = 10,
+        MYSQL_TYPE_TIME = 11,
+
+        MYSQL_TYPE_DATETIME = 12,
+        MYSQL_TYPE_YEAR = 13,
+
+        MYSQL_TYPE_NEWDATE = 14,
+        MYSQL_TYPE_VARCHAR = 15,
+
         MYSQL_TYPE_BIT = 16,
         MYSQL_TYPE_TIMESTAMP2 = 17,
         MYSQL_TYPE_DATETIME2 = 18,

@@ -4,7 +4,7 @@ namespace MySQLDriverCS.Interop
     public interface IMySqlBind
     {
         uint BufferLength { get; set; }
-        uint Type { get; set; }
+        enum_field_types Type { get; set; }
         void GetBytes(byte[] buff, uint len);
         void InitForBind(IMySqlField fieldMetadata);
         object Value { get; set; }

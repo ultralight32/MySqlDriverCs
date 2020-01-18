@@ -44,65 +44,65 @@ namespace MySQLDriverCS
             stmt = null;
         }
 
-        public static uint DbtoMysqlType(DbType dbtype)
+        public static enum_field_types DbtoMysqlType(DbType dbtype)
         {
             switch (dbtype)
             {
                 case DbType.AnsiStringFixedLength:
                 case DbType.StringFixedLength:
                 case DbType.String:
-                    return (uint)enum_field_types.MYSQL_TYPE_STRING;
+                    return enum_field_types.MYSQL_TYPE_STRING;
 
                 case DbType.AnsiString:
-                    return (uint)enum_field_types.MYSQL_TYPE_VARCHAR;
+                    return enum_field_types.MYSQL_TYPE_VARCHAR;
 
                 case DbType.Binary:
-                    return (uint)enum_field_types.MYSQL_TYPE_BLOB;
+                    return enum_field_types.MYSQL_TYPE_BLOB;
 
                 case DbType.Boolean:
-                    return (uint)enum_field_types.MYSQL_TYPE_BIT;
+                    return enum_field_types.MYSQL_TYPE_TINY;
 
                 case DbType.Byte:
-                    return (uint)enum_field_types.MYSQL_TYPE_TINY;
+                    return enum_field_types.MYSQL_TYPE_TINY;
                 /*case DbType.Currency:
-                    return (uint) FieldTypes5.MYSQL_TYPE_MONEY;*/
+                    return  FieldTypes5.MYSQL_TYPE_MONEY;*/
                 case DbType.Date:
-                    return (uint)enum_field_types.MYSQL_TYPE_DATE;
+                    return enum_field_types.MYSQL_TYPE_DATE;
 
                 case DbType.DateTime:
-                    return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
+                    return enum_field_types.MYSQL_TYPE_DATETIME;
 
                 case DbType.DateTime2:
-                    return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
+                    return enum_field_types.MYSQL_TYPE_DATETIME;
 
                 case DbType.Decimal:
-                    return (uint)enum_field_types.MYSQL_TYPE_DECIMAL;
+                    return enum_field_types.MYSQL_TYPE_DECIMAL;
 
                 case DbType.Double:
-                    return (uint)enum_field_types.MYSQL_TYPE_DOUBLE;
+                    return enum_field_types.MYSQL_TYPE_DOUBLE;
                 /*case DbType.Guid:
-                    return (uint) FieldTypes5.MYSQL_TYPE_DOUBLE;*/
+                    return  FieldTypes5.MYSQL_TYPE_DOUBLE;*/
                 case DbType.Int16:
-                    return (uint)enum_field_types.MYSQL_TYPE_SHORT;
+                    return enum_field_types.MYSQL_TYPE_SHORT;
 
                 case DbType.Int32:
-                    return (uint)enum_field_types.MYSQL_TYPE_LONG;
+                    return enum_field_types.MYSQL_TYPE_LONG;
 
                 case DbType.Int64:
-                    return (uint)enum_field_types.MYSQL_TYPE_LONGLONG;
+                    return enum_field_types.MYSQL_TYPE_LONGLONG;
                 /*case DbType.Object:
-                    return (uint) FieldTypes5.MYSQL_TYPE_VARIANT;
+                    return  FieldTypes5.MYSQL_TYPE_VARIANT;
 
                 case DbType.SByte:
-                    return (uint) FieldTypes5.MYSQL_TYPE_LONGLONG;*/
+                    return  FieldTypes5.MYSQL_TYPE_LONGLONG;*/
                 case DbType.Single:
-                    return (uint)enum_field_types.MYSQL_TYPE_FLOAT;
+                    return enum_field_types.MYSQL_TYPE_FLOAT;
 
                 case DbType.Time:
-                    return (uint)enum_field_types.MYSQL_TYPE_TIME;
+                    return enum_field_types.MYSQL_TYPE_TIME;
 
                 default:
-                    return (uint)enum_field_types.MYSQL_TYPE_SHORT;
+                    return enum_field_types.MYSQL_TYPE_SHORT;
             }
         }
 
@@ -213,8 +213,10 @@ namespace MySQLDriverCS
             for (int i = 0; i < m_parameters.Count; i++)
             {
                 MySQLParameter param = (MySQLParameter)m_parameters[i];
-                m_bindparms[i].Type = DbtoMysqlType(param.DbType);
-                m_bindparms[i].Value = param.Value;
+                m_bindparms[i].Type = param.GetFieldType();
+          
+
+                        m_bindparms[i].Value = param.Value;
                 m_bindparms[i].IsNull = param.Value == null || param.Value == DBNull.Value;
                 if (param.Value != null && param.Value is string)
                 {
@@ -225,7 +227,7 @@ namespace MySQLDriverCS
                     m_bindparms[i].Length = (uint)param.Size;
                 }
             }
-            int code = stmt.mysql_stmt_bind_param64(m_bindparms);
+            int code = stmt.mysql_stmt_bind_param(m_bindparms);
             if (code != 0)
                 throw new MySqlException(stmt);
         }
@@ -267,7 +269,7 @@ namespace MySQLDriverCS
             }
             else
             {
-                return new MySQLRealQueryDataReader(m_field_count, stmt, m_parameters, this.connection, closeConnection);
+                return new MySQLRealQueryDataReader(m_field_count, stmt, this.connection, closeConnection);
             }
         }
 

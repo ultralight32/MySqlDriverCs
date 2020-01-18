@@ -64,7 +64,7 @@ namespace MySQLDriverCS
             for (i = 0; i < num_fields; i++)
             {
 
-                IMySqlField field = new MYSQL_FIELD_VERSION_5_64();
+                IMySqlField field = new MYSQL_FIELD();
                 var ptr = nativeResult.mysql_fetch_field_direct(i);
                 Marshal.PtrToStructure(ptr, field);
 

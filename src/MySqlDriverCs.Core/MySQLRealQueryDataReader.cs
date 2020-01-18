@@ -29,7 +29,6 @@
 using MySQLDriverCS.Interop;
 using System;
 using System.Data;
-using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -42,24 +41,21 @@ namespace MySQLDriverCS
         private readonly uint _fieldCount;
         private readonly NativeStatement _stmt;
 
-        bool m_CloseConnection = false;
-         IMySqlField[] m_fields;
+        private bool m_CloseConnection = false;
+        private IMySqlField[] m_fields;
 
-      
-         MYSQL_BIND[] m_row;
+        private MYSQL_BIND[] m_row;
 
-    
-         int MYSQL_NO_DATA = 100;
+        private int MYSQL_NO_DATA = 100;
 
-    
-        public MySQLRealQueryDataReader(uint fieldCount, NativeStatement stmt, MySQLParameterCollection parameters, MySQLConnection connection, bool closeConnection)
+        public MySQLRealQueryDataReader(uint fieldCount, NativeStatement stmt, MySQLConnection connection, bool closeConnection)
         {
             _connection = connection;
             _stmt = stmt;
             m_CloseConnection = closeConnection;
 
             IsClosed = false;
-           
+
             _fieldCount = fieldCount;
 
             IntPtr fields;
@@ -76,28 +72,29 @@ namespace MySQLDriverCS
                 fields = mysql_stmt.result.data;
             }
 
-            m_fields = (IMySqlField[])Array.CreateInstance(new MYSQL_FIELD_VERSION_5_64().GetType(), _fieldCount);
+            m_fields = (IMySqlField[])Array.CreateInstance(new MYSQL_FIELD().GetType(), _fieldCount);
 
             long pointer = fields.ToInt64();
             int index;
             m_row = new MYSQL_BIND[_fieldCount];
             for (index = 0; index < _fieldCount; index++)
             {
-                IMySqlField fieldMetadata = new MYSQL_FIELD_VERSION_5_64();
+                IMySqlField fieldMetadata = new MYSQL_FIELD();
                 IntPtr ptr = new IntPtr(pointer);
                 Marshal.PtrToStructure(ptr, fieldMetadata);
                 pointer += Marshal.SizeOf(fieldMetadata);
                 m_fields[index] = fieldMetadata;
                 m_row[index] = new MYSQL_BIND();
 
-                if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_BLOB)
+                if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB)
                 {
-                    fieldMetadata.MaxLength = 1024;
+                    fieldMetadata.MaxLength = 1024;    // TODO: case needs deep review
                 }
-                else if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL
-                {
-                    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
-                }
+                //else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL
+                //{
+                //    // TODO: case needs deep review
+                //    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
+                //}
                 m_row[index].InitForBind(fieldMetadata);
             }
 
@@ -110,7 +107,7 @@ namespace MySQLDriverCS
         public int Depth => 1;
 
         /// <inheritdoc />
-        public int FieldCount { get { if (IsClosed) return 0; else return (int)_fieldCount; } }
+        public int FieldCount => (int)_fieldCount;
 
         /// <inheritdoc />
         public bool IsClosed { get; private set; }
@@ -139,7 +136,7 @@ namespace MySQLDriverCS
             get
             {
                 if (IsClosed) throw new MySqlException("Reader must be open");
-                if (RowType(i) == (uint)FieldTypes.MYSQL_TYPE_BLOB)
+                if (RowType(i) == enum_field_types.MYSQL_TYPE_BLOB)
                 {
                     return GetAllBytes(i);
                 }
@@ -170,14 +167,12 @@ namespace MySQLDriverCS
                 if (_connection != null && m_CloseConnection)
                     _connection.Close();
             }
-
-
         }
 
         /// <summary>
         /// Closes this reader
         /// </summary>
-        public  void Dispose()
+        public void Dispose()
         {
             Close();
         }
@@ -195,12 +190,12 @@ namespace MySQLDriverCS
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
-                IMySqlField ft = new MYSQL_FIELD_VERSION_5_64();
-                ft.Type = (uint)enum_field_types.MYSQL_TYPE_BLOB;
+                IMySqlField ft = new MYSQL_FIELD();
+                ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;
                 newbind[0].InitForBind(ft);
 
-                sbyte errorCode = _stmt.mysql_stmt_fetch_column64(newbind, (uint)i, (uint)fieldOffset);
+                sbyte errorCode = _stmt.mysql_stmt_fetch_column(newbind, (uint)i, (uint)fieldOffset);
                 if (errorCode != 0)
                     throw new MySqlException(_stmt);
 
@@ -343,44 +338,26 @@ namespace MySQLDriverCS
             }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="i"></param>
         public void RowDispose(int i)
         {
             m_row[i].Dispose();
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
         public bool RowIsNull(int i)
         {
             return m_row[i].IsNull;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public uint RowType(int i)
+        public enum_field_types RowType(int i)
         {
             return m_row[i].Type;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
         public object RowValue(int i)
         {
             return m_row[i].Value;
         }
+
         private object GetAllBytes(int id)
         {
             if (RowIsNull(id))

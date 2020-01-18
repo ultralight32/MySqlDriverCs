@@ -139,14 +139,14 @@ namespace MySQLDriverCS
 
         public MySQLParameter this[int index]
         {
-            get => (MySQLParameter)GetParameter(index);
+            get => (MySQLParameter)m_List[index];
             set => SetParameter(index, value);
         }
 
         /// <inheritdoc />
         object IList.this[int index]
         {
-            get => (MySQLParameter)GetParameter(index);
+            get => (MySQLParameter)m_List[index];
             set => SetParameter(index, (MySQLParameter)value);
         }
 
@@ -303,7 +303,7 @@ namespace MySQLDriverCS
             return -1;
         }
 
-        private DbParameter GetParameter(string parameterName)
+        private MySQLParameter GetParameter(string parameterName)
         {
             int num1 = IndexOf(parameterName);
 
@@ -315,12 +315,7 @@ namespace MySQLDriverCS
             return m_List[num1];
         }
 
-        private DbParameter GetParameter(int index)
-        {
-            return m_List[index];
-        }
-
-        private void SetParameter(string parameterName, DbParameter value)
+        private void SetParameter(string parameterName, MySQLParameter value)
         {
             int index = IndexOf(parameterName);
 
@@ -332,7 +327,7 @@ namespace MySQLDriverCS
             SetParameter(index, value);
         }
 
-        private void SetParameter(int index, DbParameter value)
+        private void SetParameter(int index, MySQLParameter value)
         {
             m_List[index] = (MySQLParameter)value;
         }

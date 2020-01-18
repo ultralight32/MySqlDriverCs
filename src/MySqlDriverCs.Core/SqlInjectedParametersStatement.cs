@@ -62,11 +62,11 @@ namespace MySQLDriverCS
                 {
                     DateTime dt = (DateTime)Value;
                     string dateStr;
-                    if (param.DbType == DbType.Date)
+                    if (param.DbType == MySqlDbType.Date)
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") + "\" "; ;
                     }
-                    else if (param.DbType == DbType.DateTime2)
+                    else if (param.DbType == MySqlDbType.DateTime)
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") +
                                   " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + ((dt.Millisecond > 0) ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";

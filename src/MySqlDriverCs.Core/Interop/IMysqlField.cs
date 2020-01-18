@@ -12,7 +12,7 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Type of field
         /// </summary>
-        uint Type { get; set; }
+        enum_field_types Type { get; set; }
         /// <summary>
         /// Max width for selected set
         /// </summary>
