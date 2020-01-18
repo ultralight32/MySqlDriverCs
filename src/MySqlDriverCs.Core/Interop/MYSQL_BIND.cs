@@ -8,7 +8,7 @@ namespace MySQLDriverCS.Interop
     /// Support for 64 bit
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]//Pack = 4  invalid for x64
-    public struct MYSQL_BIND_64 : IMySqlBind
+    public struct MYSQL_BIND : IMySqlBind
     {
         /// <summary>
         ///  A pointer to an unsigned long  variable that indicates the actual number of bytes of data stored in *buffer. 

@@ -1,28 +1,44 @@
+using MySQLDriverCS.Interop;
 using System;
 using System.Data;
 using System.Data.Common;
 using System.Runtime.InteropServices;
-using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS
 {
-    internal abstract class PreparedStatementBase : Statement
+    internal class PreparedStatement : Statement
     {
         protected bool prepared;
         protected NativeStatement stmt;
 
-        protected int m_parm_count;
+        protected int _detectedParamCount;
         protected int m_fetch_size;
         protected uint m_cursor_type;
         protected uint m_field_count;
+        private MYSQL_BIND[] m_bindparms;
 
-        protected PreparedStatementBase(MySQLConnection connection)
+        public PreparedStatement(MySQLConnection connection, string query)
         {
             stmt = new NativeStatement(connection.NativeConnection);
+            this.connection = connection;
+            this.query = query;
+
+            prepared = false;
+            _detectedParamCount = -1;
+            m_fetch_size = 1;
+            m_field_count = 0;
         }
 
         public override void Dispose()
         {
+            if (m_bindparms != null)
+            {
+                for (int i = 0; i < m_bindparms.Length; i++)
+                {
+                    m_bindparms[i].Dispose();
+                }
+            }
+
             if (stmt == null) return;
             stmt.Dispose();
             stmt = null;
@@ -36,47 +52,60 @@ namespace MySQLDriverCS
                 case DbType.StringFixedLength:
                 case DbType.String:
                     return (uint)enum_field_types.MYSQL_TYPE_STRING;
+
                 case DbType.AnsiString:
                     return (uint)enum_field_types.MYSQL_TYPE_VARCHAR;
+
                 case DbType.Binary:
                     return (uint)enum_field_types.MYSQL_TYPE_BLOB;
+
                 case DbType.Boolean:
                     return (uint)enum_field_types.MYSQL_TYPE_BIT;
+
                 case DbType.Byte:
                     return (uint)enum_field_types.MYSQL_TYPE_TINY;
-                /*case DbType.Currency: 
+                /*case DbType.Currency:
                     return (uint) FieldTypes5.MYSQL_TYPE_MONEY;*/
                 case DbType.Date:
                     return (uint)enum_field_types.MYSQL_TYPE_DATE;
+
                 case DbType.DateTime:
                     return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
+
                 case DbType.DateTime2:
                     return (uint)enum_field_types.MYSQL_TYPE_DATETIME;
+
                 case DbType.Decimal:
                     return (uint)enum_field_types.MYSQL_TYPE_DECIMAL;
+
                 case DbType.Double:
                     return (uint)enum_field_types.MYSQL_TYPE_DOUBLE;
-                /*case DbType.Guid: 
+                /*case DbType.Guid:
                     return (uint) FieldTypes5.MYSQL_TYPE_DOUBLE;*/
                 case DbType.Int16:
                     return (uint)enum_field_types.MYSQL_TYPE_SHORT;
+
                 case DbType.Int32:
                     return (uint)enum_field_types.MYSQL_TYPE_LONG;
+
                 case DbType.Int64:
                     return (uint)enum_field_types.MYSQL_TYPE_LONGLONG;
-                /*case DbType.Object: 
+                /*case DbType.Object:
                     return (uint) FieldTypes5.MYSQL_TYPE_VARIANT;
-                case DbType.SByte: 
+
+                case DbType.SByte:
                     return (uint) FieldTypes5.MYSQL_TYPE_LONGLONG;*/
                 case DbType.Single:
                     return (uint)enum_field_types.MYSQL_TYPE_FLOAT;
+
                 case DbType.Time:
                     return (uint)enum_field_types.MYSQL_TYPE_TIME;
+
                 default:
                     return (uint)enum_field_types.MYSQL_TYPE_SHORT;
-
             }
         }
+
         #region Statement Members
 
         internal override void Prepare()
@@ -91,6 +120,7 @@ namespace MySQLDriverCS
                 prepared = true;
             }
         }
+
         /// <summary>
         /// Number of rows to fetch from server at a time when using a cursor.
         /// This options is supported since MySQL 5.0.6
@@ -107,14 +137,15 @@ namespace MySQLDriverCS
                     sbyte code = stmt.mysql_stmt_attr_set(StmtAttrTypes.STMT_ATTR_PREFETCH_ROWS, ptr);
                     Marshal.FreeHGlobal(ptr);
                     if (code != 0)
-                    { 
+                    {
                         throw new MySqlException(stmt);
                     }
                 }
             }
         }
+
         /// <summary>
-        /// Type of cursor to open for statement 
+        /// Type of cursor to open for statement
         /// This options is supported since MySQL 5.0.2
         /// </summary>
         internal override uint CursorType
@@ -146,7 +177,59 @@ namespace MySQLDriverCS
                 }
             }
         }
-        public abstract void BindParameters();
+
+        public void BindParameters()
+        {
+            if (_detectedParamCount == -1)
+            {
+                if (!prepared)
+                    Prepare();
+                // This function will not deliver a valid result until mysql_stmt_prepare()() was called.
+                _detectedParamCount = (int)stmt.mysql_stmt_param_count();
+            }
+            if (_detectedParamCount != m_parameters.Count)
+            {
+                throw new MySqlException("Invalid parameters, stmt parameters:" + _detectedParamCount + " parameters count:" + m_parameters.Count);
+            }
+
+            if (m_bindparms != null && m_bindparms.Length != m_parameters.Count)
+            {
+                for (int j = 0; j < m_bindparms.Length; j++)
+                {
+                    m_bindparms[j].Dispose();
+                }
+                m_bindparms = null;
+            }
+
+            if (m_bindparms == null)
+            {
+                m_bindparms = new MYSQL_BIND[m_parameters.Count];
+                for (int i = 0; i < m_parameters.Count; i++)
+                {
+                    m_bindparms[i] = new MYSQL_BIND();
+                }
+            }
+
+            for (int i = 0; i < m_parameters.Count; i++)
+            {
+                MySQLParameter param = (MySQLParameter)m_parameters[i];
+                m_bindparms[i].Type = DbtoMysqlType(param.DbType);
+                m_bindparms[i].Value = param.Value;
+                m_bindparms[i].IsNull = param.Value == null || param.Value == DBNull.Value;
+                if (param.Value != null && param.Value is string)
+                {
+                    m_bindparms[i].Length = (uint)connection.CharacterEncoding.GetBytes((string)param.Value).Length; //si es string
+                }
+                else
+                {
+                    m_bindparms[i].Length = (uint)param.Size;
+                }
+            }
+            int code = stmt.mysql_stmt_bind_param64(m_bindparms);
+            if (code != 0)
+                throw new MySqlException(stmt);
+        }
+
         internal override int ExecuteNonQuery()
         {
             BindParameters();
@@ -156,7 +239,7 @@ namespace MySQLDriverCS
                 if (code != 1062)//Duplicated record ER_DUP_ENTRY
                     throw new MySqlException(stmt);
                 else
-                    throw new MySqlException(stmt,"Duplicated record");
+                    throw new MySqlException(stmt, "Duplicated record");
             }
             else
             {
@@ -164,6 +247,7 @@ namespace MySQLDriverCS
                 return (int)affectedRows;
             }
         }
+
         internal override DbDataReader ExecuteReader(bool closeConnection)
         {
             bTryToCancel = false;
@@ -185,17 +269,18 @@ namespace MySQLDriverCS
             {
                 MySqlCursorDataReaderBase ret;
 
-                    ret = new MySqlCursorDataReader64(m_field_count,  stmt, m_parameters, this.connection, closeConnection);
+                ret = new MySqlCursorDataReader64(m_field_count, stmt, m_parameters, this.connection, closeConnection);
 
                 MySQLDataReader dr = ret;
                 return dr;
             }
         }
+
         internal override int ExecuteCall()
         {
             return 0;
         }
 
-        #endregion
+        #endregion Statement Members
     }
 }

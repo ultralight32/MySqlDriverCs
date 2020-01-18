@@ -64,8 +64,8 @@ namespace MySQLDriverCS
 	/// DBConn.Close();
 	/// </code></example>
 	public sealed class MySQLParameter : DbParameter, ICloneable
-	{
-		DbType m_dbType = DbType.Object;
+    {
+        private DbType _dbType=DbType.Object;
 		ParameterDirection m_direction = ParameterDirection.Input;
 		bool m_fNullable = false;
 		string m_sParamName;
@@ -86,7 +86,7 @@ namespace MySQLDriverCS
 
 		private MySQLParameter(DbType dbType, ParameterDirection direction, bool fNullable, string sParamName, string sSourceColumn, DataRowVersion sourceVersion, object value, byte precision, byte scale, int size)
 		{
-			m_dbType = dbType;
+			_dbType = dbType;
 			m_direction = direction;
 			m_fNullable = fNullable;
 			m_sParamName = sParamName;
@@ -106,7 +106,7 @@ namespace MySQLDriverCS
 		public MySQLParameter(string parameterName, DbType type)
 		{
 			m_sParamName = parameterName;
-			m_dbType = type;
+			_dbType = type;
 		}
 
 		/// <summary>
@@ -119,6 +119,7 @@ namespace MySQLDriverCS
 		{
 			m_sParamName = parameterName;
 			this.Value = value;
+            //_dbType=_inferType(value);
 		}
 
         /// <summary>
@@ -131,10 +132,10 @@ namespace MySQLDriverCS
         public MySQLParameter(string parameterName, DbType dbType, ParameterDirection parameterDirection, object value)
 		{
 			m_sParamName = parameterName;
-			m_dbType = dbType;
+			_dbType = dbType;
             m_direction = parameterDirection;
-            this.Value = value;
-		}
+            m_value = value;
+        }
 
         /// <summary>
         /// Use MySQLParameter(string parameterName, DbType type)
@@ -145,7 +146,7 @@ namespace MySQLDriverCS
         public MySQLParameter(string parameterName, DbType dbType, string sourceColumn)
         {
             m_sParamName = parameterName;
-            m_dbType = dbType;
+            _dbType = dbType;
             m_sSourceColumn = sourceColumn;
         }
 
@@ -155,8 +156,13 @@ namespace MySQLDriverCS
 		/// <value>One of the DbType values.</value>
 		public override DbType DbType
 		{
-			get { return m_dbType; }
-			set { m_dbType = value; }
+			get { return _dbType; }
+            set
+            {
+                if(m_value!=null)
+					throw new Exception("Type cannot be set if a non null value is set");
+                _dbType = value;
+            }
 		}
 
 		/// <summary>
@@ -226,11 +232,8 @@ namespace MySQLDriverCS
 			set
 			{
 				m_value = value;
-				if (!(value is Array))
-				{
-					m_dbType = _inferType(value);
-				}
-			}
+               // _dbType = _inferType(value);
+            }
 		}
 
 		private DbType _inferType(Object value)
@@ -285,9 +288,9 @@ namespace MySQLDriverCS
 					return DbType.Decimal;
 
 				case TypeCode.DateTime:
-                    if (m_dbType == DbType.Date)
+                    if (_dbType == DbType.Date)
                         return DbType.Date;
-                    else if (m_dbType == DbType.DateTime2)
+                    else if (_dbType == DbType.DateTime2)
                         return DbType.DateTime2;
                     else
                         return DbType.DateTime;
@@ -337,7 +340,7 @@ namespace MySQLDriverCS
 		/// <returns></returns>
 		public object Clone()
 		{
-			return new MySQLParameter(m_dbType, m_direction, m_fNullable, m_sParamName,
+			return new MySQLParameter(_dbType, m_direction, m_fNullable, m_sParamName,
 				m_sSourceColumn, m_sourceVersion, m_value, m_precision, m_scale, m_size);
 		}
 

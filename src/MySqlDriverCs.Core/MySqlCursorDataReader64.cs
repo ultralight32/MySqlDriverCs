@@ -12,7 +12,7 @@ namespace MySQLDriverCS
         /// <summary>
         /// 
         /// </summary>
-        protected MYSQL_BIND_64[] m_row;
+        protected MYSQL_BIND[] m_row;
         /// <summary>
         /// 
         /// </summary>
@@ -75,7 +75,7 @@ namespace MySQLDriverCS
 
             long pointer = fields.ToInt64();
             int index;
-            m_row = new MYSQL_BIND_64[m_fieldCount];
+            m_row = new MYSQL_BIND[m_fieldCount];
             for (index = 0; index < m_fieldCount; index++)
             {
                 IMySqlField fieldMetadata = new MYSQL_FIELD_VERSION_5_64();
@@ -83,7 +83,7 @@ namespace MySQLDriverCS
                 Marshal.PtrToStructure(ptr, fieldMetadata);
                 pointer += Marshal.SizeOf(fieldMetadata);
                 m_fields[index] = fieldMetadata;
-                m_row[index] = new MYSQL_BIND_64();
+                m_row[index] = new MYSQL_BIND();
 
                 if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_BLOB)
                 {
@@ -91,7 +91,7 @@ namespace MySQLDriverCS
                 }
                 else if (fieldMetadata.Type == (uint)enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL 
                 {
-                    fieldMetadata.Type = PreparedStatementBase.DbtoMysqlType(parameters[index].DbType);
+                    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
                 }
                 m_row[index].InitForBind(fieldMetadata);
             }
@@ -113,8 +113,8 @@ namespace MySQLDriverCS
         {
             if (m_row[i].Length > m_row[i].BufferLength)//data truncation
             {
-                MYSQL_BIND_64[] newbind = new MYSQL_BIND_64[1];
-                newbind[0] = new MYSQL_BIND_64();
+                MYSQL_BIND[] newbind = new MYSQL_BIND[1];
+                newbind[0] = new MYSQL_BIND();
                 IMySqlField ft = new MYSQL_FIELD_VERSION_5_64();
                 ft.Type = (uint)enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;

@@ -255,21 +255,14 @@ namespace MySQLDriverCS
 			get
 			{
 				if (pStmt == null)
-				{
-					if (connection == null || connection.State != ConnectionState.Open)
+                {
+                    if (connection == null || connection.State != ConnectionState.Open)
 					{
 						throw new MySqlException("Connection must be valid and open.");
 					}
 
-					if (UsePreparedStatement)
-                    {
-               
-                            pStmt = new PreparedStatement64(connection, _query);
-         
-                    }
-                    else
-						pStmt = new SqlInjectedParametersStatement(connection, _query);
-				}
+                    pStmt = UsePreparedStatement ? (Statement) new PreparedStatement(connection, _query) : new SqlInjectedParametersStatement(connection, _query);
+                }
 				return pStmt;
 			}
 
