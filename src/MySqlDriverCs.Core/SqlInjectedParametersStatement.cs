@@ -170,7 +170,7 @@ namespace MySQLDriverCS
                 var resultPtr = connection.NativeConnection.mysql_store_result();
                 if (resultPtr != IntPtr.Zero)  // there are rows
                 {
-                    using (var dr = new MySQLDataReader(resultPtr, this.connection, this, false))
+                    using (var dr = new MySQLQueryDataReader(resultPtr, this.connection, this, false))
                     {
                         if (dr.Read())
                         {
@@ -209,7 +209,7 @@ namespace MySQLDriverCS
 
                     // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
                     // Don't close connection after close DataReader
-                    MySQLDataReader dr = new MySQLDataReader(result, this.connection, this, closeConnection);
+                    var dr = new MySQLQueryDataReader(result, this.connection, this, closeConnection);
                     return dr;
                 }
                 else  // mysql_store_result() returned nothing; should it have?

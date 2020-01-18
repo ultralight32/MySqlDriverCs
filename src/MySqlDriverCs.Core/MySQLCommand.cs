@@ -290,9 +290,9 @@ namespace MySQLDriverCS
 		/// Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx). 
 		/// </summary>
 		/// <returns>MySQLDataReader</returns>
-		public MySQLDataReader ExecuteReaderEx()
+		public MySQLRealQueryDataReader ExecuteReaderEx()
 		{
-			return (MySQLDataReader)ExecuteReader(false);
+			return (MySQLRealQueryDataReader)ExecuteReader(false);
 		}
 
 		/// <summary>

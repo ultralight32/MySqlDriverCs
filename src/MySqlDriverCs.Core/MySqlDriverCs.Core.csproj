@@ -42,7 +42,7 @@
     <Compile Update="MySQLDataAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="MySQLDataReader.cs">
+    <Compile Update="MySQLRealQueryDataReader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLDeleteCommand.cs">

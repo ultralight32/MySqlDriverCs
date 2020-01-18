@@ -267,12 +267,7 @@ namespace MySQLDriverCS
             }
             else
             {
-                MySqlCursorDataReaderBase ret;
-
-                ret = new MySqlCursorDataReader64(m_field_count, stmt, m_parameters, this.connection, closeConnection);
-
-                MySQLDataReader dr = ret;
-                return dr;
+                return new MySQLRealQueryDataReader(m_field_count, stmt, m_parameters, this.connection, closeConnection);
             }
         }
 
