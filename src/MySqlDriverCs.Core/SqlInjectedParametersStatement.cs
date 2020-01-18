@@ -187,7 +187,7 @@ namespace MySQLDriverCS
             return 0;
         }
 
-        internal override DbDataReader ExecuteReader(bool closeConnection)
+        internal override IDataReader ExecuteReader(bool closeConnection)
         {
             bTryToCancel = false;
             repQuery = BindParameters();

@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Data.Common;
 
 namespace MySQLDriverCS
@@ -46,7 +47,7 @@ namespace MySQLDriverCS
 		{
 			return 0;
 		}
-		internal virtual DbDataReader ExecuteReader(bool CloseConnection)
+		internal virtual IDataReader ExecuteReader(bool closeConnection)
 		{
 			return null;
 		}

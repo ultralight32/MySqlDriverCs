@@ -86,19 +86,16 @@ namespace MySQLDriverCS
     /// </summary>
     /// <remarks>All members are supported now (2002-10-28)</remarks>
     /// 
-    public class MySQLConnection : DbConnection
+    public class MySQLConnection : IDbConnection
     {
         // BEGIN ADDITION 2004-07-01 adding timeout and compression		
         // these come from the libmysql include enumerations (assuming the compilers starts 
         // enumerating at 0, which *should* be the case)
         // END ADDITION
 
-        const uint MYSQL_OPTION_CONNECTION_TIMEOUT = 0;
-        const uint MYSQL_OPTION_COMPRESS = 1;
 
-        private string connectionString;
-        internal string dbname = null;
-        internal Encoding encoding = Encoding.Default;
+        internal string Dbname = null;
+        internal Encoding Encoding = Encoding.Default;
 
         /// <summary>
         /// Creates a connection
@@ -112,13 +109,13 @@ namespace MySQLDriverCS
         /// <param name="cs"></param>
         public MySQLConnection(string cs)
         {
-            this.connectionString = cs;
+            this.ConnectionString = cs;
         }
         private bool bDisposed = false;
         /// <summary>
         /// Dispose destructor
         /// </summary>
-        public new void Dispose()
+        public void Dispose()
         {
             if (bDisposed) return;
             this.Close();
@@ -128,43 +125,14 @@ namespace MySQLDriverCS
         /// <summary>
         /// Gets or sets the string used to open a database.
         /// </summary>
-        public override string ConnectionString
-        {
-            get { return connectionString; }
-            set { connectionString = value; }
-        }
+        public string ConnectionString { get; set; }
+
         /// <summary>
         /// CharacterSet
         /// </summary>
-        public Encoding CharacterEncoding
-        {
-            get { return encoding; }
-        }
+        public Encoding CharacterEncoding => Encoding;
 
-        /// <summary>
-        /// Gets the time to wait while trying to establish a connection before terminating the attempt and generating an error.
-        /// </summary>
-        public int Port
-        {
-            get
-            {
-                string val = FindValueInCS("Port");
-                if (val == "")
-                    return 3306;
-                else
-                    return Convert.ToInt32(val);
-            }
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public override string ServerVersion
-        {
-            get { throw new Exception("The method or operation is not implemented."); }
-        }
-
-        #region Native tracer
         private INativeTracer _currentNativeTracer;
         private static INativeTracer _defaultNativeTracer;
 
@@ -197,12 +165,11 @@ namespace MySQLDriverCS
             }
         }
         private INativeTracer NativeTracer => new InternalNativeTracer(this);
-        #endregion
 
         /// <summary>
         /// Gets the time to wait while trying to establish a connection before terminating the attempt and generating an error.
         /// </summary>
-        public override int ConnectionTimeout
+        public int ConnectionTimeout
         {
             get
             {
@@ -215,22 +182,14 @@ namespace MySQLDriverCS
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public override string DataSource
-        {
-            get { return Database; }
-        }
-
-        /// <summary>
         /// Gets the name of the current database or the database to be used once a connection is open.
         /// </summary>
-        public override string Database
+        public string Database
         {
             get
             {
-                if (dbname != null)
-                    return dbname;
+                if (Dbname != null)
+                    return Dbname;
                 else
                     return FindValueInCS("Data Source=");
             }
@@ -239,7 +198,7 @@ namespace MySQLDriverCS
         private string FindValueInCS(string keyword)
         {
             keyword = keyword.ToLower();
-            string connectionStringLo = connectionString.ToLower();
+            string connectionStringLo = ConnectionString.ToLower();
             int pos = connectionStringLo.IndexOf(keyword);
             if (pos == -1)
             {
@@ -247,15 +206,15 @@ namespace MySQLDriverCS
             }
             else
             {
-                pos = connectionString.IndexOf('=', pos) + 1;
-                int pos2 = connectionString.IndexOf(';', pos);
+                pos = ConnectionString.IndexOf('=', pos) + 1;
+                int pos2 = ConnectionString.IndexOf(';', pos);
                 if (pos2 == -1)
                 {
-                    return connectionString.Substring(pos);
+                    return ConnectionString.Substring(pos);
                 }
                 else
                 {
-                    return connectionString.Substring(pos, pos2 - pos);
+                    return ConnectionString.Substring(pos, pos2 - pos);
                 }
             }
         }
@@ -263,7 +222,7 @@ namespace MySQLDriverCS
         /// <summary>
         /// Gets the current state of the connection.
         /// </summary>
-        public override ConnectionState State
+        public ConnectionState State
         {
             get
             {
@@ -274,12 +233,28 @@ namespace MySQLDriverCS
             }
         }
 
+
+        public IDbTransaction BeginTransaction()
+        {
+            return null;
+        }
+
         /// <summary>
         /// Begins a transaction
         /// </summary>
         /// <param name="il"></param>
         /// <returns></returns>
-        protected override DbTransaction BeginDbTransaction(IsolationLevel il)
+        IDbTransaction IDbConnection.BeginTransaction(IsolationLevel il)
+        {
+            return new MySQLTransaction(this, il);
+        }
+
+        /// <summary>
+        /// Begins a transaction
+        /// </summary>
+        /// <param name="il"></param>
+        /// <returns></returns>
+        public MySQLTransaction BeginTransaction(IsolationLevel il)
         {
             return new MySQLTransaction(this, il);
         }
@@ -288,10 +263,10 @@ namespace MySQLDriverCS
         /// Changes database
         /// </summary>
         /// <param name="databaseName"></param>
-        public override void ChangeDatabase(string databaseName)
+        public void ChangeDatabase(string databaseName)
         {
             if (0 == NativeConnection.mysql_select_db(databaseName))
-                this.dbname = databaseName;
+                this.Dbname = databaseName;
             else
             {
                 throw new MySqlException("MySQLDriverCS Error: change database failed, perhaps user is not authorized to access that database." + NativeConnection.mysql_error());
@@ -302,7 +277,11 @@ namespace MySQLDriverCS
         /// Creates an empty command linked to this connection
         /// </summary>
         /// <returns></returns>
-        public new IDbCommand CreateCommand()
+        IDbCommand IDbConnection.CreateCommand()
+        {
+            return new MySQLCommand("", this);
+        }
+        public MySQLCommand CreateCommand()
         {
             return new MySQLCommand("", this);
         }
@@ -312,7 +291,7 @@ namespace MySQLDriverCS
         /// <summary>
         /// Opens a database connection with the settings specified by the ConnectionString property of the provider-specific Connection object.
         /// </summary>
-        public override void Open()
+        public void Open()
         {
             string database = this.FindValueInCS("Data Source=");
             string location = this.FindValueInCS("Location=");
@@ -405,7 +384,7 @@ namespace MySQLDriverCS
                 {
                     if (NativeConnection.mysql_set_character_set(characterset) == 0)
                     {
-                        encoding = Encoding.GetEncoding(characterset);
+                        Encoding = Encoding.GetEncoding(characterset);
                     }
                 }
             }
@@ -418,25 +397,20 @@ namespace MySQLDriverCS
 #if DEBUG
             NativeConnection.mysql_ping();
 #endif
+            Dbname = database;
         }
 
         /// <summary>
         /// Closes the connection to the database.
         /// </summary>
-        public override void Close()
+        public void Close()
         {
             if (NativeConnection == null) return;
             NativeConnection.Dispose();
             NativeConnection = null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override DbCommand CreateDbCommand()
-        {
-            return new MySQLCommand(null, this);
-        }
+
+   
     }
 }
