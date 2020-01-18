@@ -121,18 +121,33 @@ namespace MySQLDriverCS
 			this.Value = value;
 		}
 
-		/// <summary>
-		/// Use MySQLParameter(string parameterName, DbType type)
-		/// </summary>
-		/// <param name="parameterName">The name of the parameter to map.</param>
-		/// <param name="dbType">One of the DbType values</param>
-		/// <param name="sourceColumn">This value is ignored. Suported by future Operation</param>
-		public MySQLParameter(string parameterName, DbType dbType, string sourceColumn)
+        /// <summary>
+        /// Use MySQLParameter(string parameterName, DbType type)
+        /// </summary>
+        /// <param name="parameterName">The name of the parameter to map.</param>
+        /// <param name="dbType">One of the DbType values</param>
+        /// <param name="parameterDirection"></param>
+        /// <param name="value">value</param>
+        public MySQLParameter(string parameterName, DbType dbType, ParameterDirection parameterDirection, object value)
 		{
 			m_sParamName = parameterName;
 			m_dbType = dbType;
-			m_sSourceColumn = sourceColumn;
+            m_direction = parameterDirection;
+            this.Value = value;
 		}
+
+        /// <summary>
+        /// Use MySQLParameter(string parameterName, DbType type)
+        /// </summary>
+        /// <param name="parameterName">The name of the parameter to map.</param>
+        /// <param name="dbType">One of the DbType values</param>
+        /// <param name="sourceColumn">This value is ignored. Suported by future Operation</param>
+        public MySQLParameter(string parameterName, DbType dbType, string sourceColumn)
+        {
+            m_sParamName = parameterName;
+            m_dbType = dbType;
+            m_sSourceColumn = sourceColumn;
+        }
 
 		/// <summary>
 		/// Gets or sets the DbType of the parameter. 

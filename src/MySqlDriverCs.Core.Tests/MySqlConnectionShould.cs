@@ -158,6 +158,8 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
+    
+
         [Theory]
         [ClassData(typeof(FieldTypeTestData))]
         public void ExecuteDataReaderForAnyFieldType(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
@@ -205,9 +207,92 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
+        public class PreparedFieldTypeTestData : IEnumerable<object[]>
+        {
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                foreach (var tuple in DataTypes())
+                {
+
+                    // with value
+                    yield return tuple;
+
+                    // with null
+                    tuple[1] = "NULL";
+                    tuple[2] = Convert.DBNull;
+                    yield return tuple;
+                }
+
+            }
+
+            private IEnumerable<object[]> DataTypes()
+            {
+                // numerics
+                yield return new object[] { "TINYINT", "1", new MySQLParameter("value",DbType.Boolean,ParameterDirection.Input,true),  true };
+                yield return new object[] { "TINYINT UNSIGNED", new MySQLParameter("value", DbType.Byte, ParameterDirection.Input, byte.MaxValue), byte.MaxValue };
+                yield return new object[] { "SMALLINT", new MySQLParameter("value", DbType.Int16, ParameterDirection.Input, short.MinValue), short.MinValue };
+                yield return new object[] { "SMALLINT", new MySQLParameter("value", DbType.Int16, ParameterDirection.Input, ushort.MaxValue), ushort.MaxValue };
+                yield return new object[] { "MEDIUMINT", new MySQLParameter("value", DbType.Int32, ParameterDirection.Input, 16777215), 16777215 };
+                yield return new object[] { "MEDIUMINT UNSIGNED", new MySQLParameter("value", DbType.Int32, ParameterDirection.Input, (uint)16777215), (uint)16777215 };
+                yield return new object[] { "INT", new MySQLParameter("value", DbType.Int32, ParameterDirection.Input, int.MinValue), int.MinValue };
+                yield return new object[] { "INT UNSIGNED", new MySQLParameter("value", DbType.Int32, ParameterDirection.Input, uint.MaxValue), uint.MaxValue };
+                yield return new object[] { "BIGINT", new MySQLParameter("value", DbType.Int64, ParameterDirection.Input, long.MinValue), long.MinValue };
+                yield return new object[] { "BIGINT UNSIGNED", new MySQLParameter("value", DbType.Int64, ParameterDirection.Input, ulong.MaxValue), ulong.MaxValue };
+                yield return new object[] { "DECIMAL(18,6)", new MySQLParameter("value", DbType.Decimal, ParameterDirection.Input, 345435.567894m), -345435.567894m };
+                yield return new object[] { "FLOAT", new MySQLParameter("value", DbType.Single, ParameterDirection.Input, 1.25e-5f), 1.25e-5f };
+                yield return new object[] { "DOUBLE", new MySQLParameter("value", DbType.Double, ParameterDirection.Input, 345435.567894d), 345435.567894d };
+                yield return new object[] { "BIT(2)", new MySQLParameter("value", DbType.Int64, ParameterDirection.Input, (ulong)1), ((ulong)1), };
+
+                // time
+                yield return new object[] { "DATE", new MySQLParameter("value", DbType.Date, ParameterDirection.Input, new DateTime(1, 1, 1)), new DateTime(1, 1, 1), };
+                yield return new object[] { "TIME", new MySQLParameter("value", DbType.Time, ParameterDirection.Input, new DateTime(1, 1, 1, 13, 40, 45)), new DateTime(1, 1, 1, 13, 40, 45) };
+                yield return new object[] { "DATETIME", new MySQLParameter("value", DbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) };
+                yield return new object[] { "DATETIME", new MySQLParameter("value", DbType.DateTime2, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45,999) };
+                yield return new object[] { "TIMESTAMP", new MySQLParameter("value", DbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) };
+                yield return new object[] { "TIMESTAMP", new MySQLParameter("value", DbType.DateTime2, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45, 999) };
+                yield return new object[] { "TIMESTAMP", "'2020-12-11 13:40:45'", new DateTime(2020, 12, 11, 13, 40, 45) };
+                yield return new object[] { "YEAR", "2020", new MySQLParameter("value", DbType.DateTime, ParameterDirection.Input, new DateTime(2020, 1, 1)), new DateTime(2020, 1, 1) };
+
+                // varchars
+                yield return new object[] { "VARCHAR(20) CHARACTER SET utf8", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "CHAR(20) CHARACTER SET utf8", new MySQLParameter("value", DbType.StringFixedLength, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "TEXT CHARACTER SET utf8", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "TINYTEXT CHARACTER SET utf8", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "MEDIUMTEXT CHARACTER SET utf8", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "LONGTEXT CHARACTER SET utf8", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "BINARY(20)", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+                yield return new object[] { "VARBINARY(20)", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "some text"), "some text" };
+
+                // enums & sets
+                yield return new object[] { "ENUM('a','b','c') CHARACTER SET binary", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "a"), "a" };
+                yield return new object[] { "SET('a', 'b', 'c', 'd')", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "d,a,d"), "a,d" };
+
+                // blobs
+                yield return new object[] { "BLOB", "X'01AF'", new MySQLParameter("value", DbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf } };
+                yield return new object[] { "TINYBLOB", "X'01AF'", new MySQLParameter("value", DbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf } };
+                yield return new object[] { "MEDIUMBLOB", "X'01AF'", new MySQLParameter("value", DbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf } };
+                yield return new object[] { "LONGBLOB", "X'01AF'", new MySQLParameter("value", DbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf } };
+
+                // geometry
+                //yield return new object[] { "POINT", "POINT(1,1)", new MySqlPoint(1,1), };
+                //yield return new object[] { "LINESTRING", "ST_LineStringFromText('LINESTRING(0 0,1 1,2 2)')", new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(1, 1), new MySqlPoint(2, 2)), };
+                //yield return new object[] { "POLYGON", "ST_PolygonFromText('POLYGON((0 0,10 0,10 10,0 10,0 0),(5 5,7 5,7 7,5 7, 5 5))')", new MySqlPolygon(new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(10,0), new MySqlPoint(10,10), new MySqlPoint(0,10), new MySqlPoint(0,0)), new MySqlLineString(new MySqlPoint(5,5), new MySqlPoint(7,5), new MySqlPoint(7,7), new MySqlPoint(5,7), new MySqlPoint(5,5))),  };
+                //yield return new object[] { "GEOMETRYCOLLECTION", "ST_GeomCollFromText('GEOMETRYCOLLECTION(POINT(1 1),LINESTRING(0 0,1 1,2 2,3 3,4 4))')", new MySqlGeometryCollection(new MySqlPoint(1,1), new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(1,1), new MySqlPoint(2,2), new MySqlPoint(3,3), new MySqlPoint(4,4))), };
+
+                // json
+                yield return new object[] { "JSON", new MySQLParameter("value", DbType.String, ParameterDirection.Input, "{\"key1\": \"value1\", \"key2\": \"value2\"}"), "{\"key1\": \"value1\", \"key2\": \"value2\"}" };
+            }
+
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
         [Theory]
-        [ClassData(typeof(FieldTypeTestData))]
-        public void ExecuteDataReaderForAnyFieldTypeWithPreparedStatement(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
+        [ClassData(typeof(PreparedFieldTypeTestData))]
+        public void ExecuteDataReaderForAnyFieldTypeWithPreparedStatement(string mySqlTypeDeclaration,  MySQLParameter inputParameter, object expectedValue)
         {
             var c = CachedConnection;
             {
@@ -219,11 +304,73 @@ namespace MySqlDriverCs.Core.Tests
                 using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
                     cmd2.ExecuteNonQuery();
 
-                using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,{insertedLiteral});", c)) cmd3.ExecuteNonQuery();
+                using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,?);", c))
+                {
+                    cmd3.UsePreparedStatement = true;
+                    cmd3.Parameters.Add(inputParameter);
+                    cmd3.ExecuteNonQuery();
+                }
 
                 using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
                 {
                     cmd.UsePreparedStatement = true;
+                    var p = new MySQLParameter("id", DbType.Int32);
+                    p.Value = 0;
+                    cmd.Parameters.Add(p);
+
+                    var reader = cmd.ExecuteReader();
+                    Assert.True(reader.Read());
+
+                    {
+                        var ordinal = reader.GetOrdinal("COL_VALUE");
+                        var executeScalar = reader.GetValue(ordinal);
+
+                        Assert.NotNull(executeScalar);
+                        if (expectedValue == null)
+                            Assert.Null(executeScalar);
+                        else
+                        {
+                            Assert.NotNull(executeScalar);
+                            Assert.IsType(expectedValue.GetType(), executeScalar);
+                            if (expectedValue is string)
+                                expectedValue = "'" + expectedValue.ToString() + "'";
+                            if (executeScalar is string)
+                                executeScalar = "'" + executeScalar.ToString() + "'";
+                            Assert.Equal(expectedValue, executeScalar);
+                        }
+                    }
+
+                    Assert.False(reader.Read());
+
+
+                }
+            }
+        }
+
+        [Theory]
+        [ClassData(typeof(PreparedFieldTypeTestData))]
+        public void ExecuteDataReaderForAnyFieldTypeWithInjectedStatement(string mySqlTypeDeclaration,  MySQLParameter inputParameter, object expectedValue)
+        {
+            var c = CachedConnection;
+            {
+
+
+                using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                    cmd1.ExecuteNonQuery();
+
+                using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
+                    cmd2.ExecuteNonQuery();
+
+                using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,?);", c))
+                {
+                    cmd3.UsePreparedStatement = false;
+                    cmd3.Parameters.Add(inputParameter);
+                    cmd3.ExecuteNonQuery();
+                }
+
+                using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
+                {
+                    cmd.UsePreparedStatement = false;
                     var p = new MySQLParameter("id", DbType.Int32);
                     p.Value = 0;
                     cmd.Parameters.Add(p);
