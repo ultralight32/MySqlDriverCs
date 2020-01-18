@@ -41,6 +41,11 @@ namespace MySQLDriverCS
                 string paramName = param.ParameterName;
                 object Value = param.Value;
 
+                if (resQuery[0] != '@' && resQuery.IndexOf("@" +paramName) >= 0)
+                {
+                    paramName = "@" + paramName;
+                }
+
                 if (param.Direction == ParameterDirection.Output && resQuery.StartsWith("CALL"))
                 {
                     // Hack - en calls no modifico el parametro de output, sino MySql da error
@@ -70,6 +75,10 @@ namespace MySQLDriverCS
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") +
                                   " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + ((dt.Millisecond > 0) ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";
+                    }
+                    else if (param.DbType == MySqlDbType.Year)
+                    {
+                        dateStr = dt.Year.ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {

@@ -87,7 +87,7 @@ namespace MySQLDriverCS
 
                 if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB)
                 {
-                    fieldMetadata.MaxLength = 1024;    // TODO: case needs deep review
+                    fieldMetadata.MaxLength = 1024;    
                 }
                 //else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL
                 //{

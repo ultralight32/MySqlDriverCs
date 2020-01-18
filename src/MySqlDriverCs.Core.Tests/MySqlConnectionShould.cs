@@ -242,17 +242,18 @@ namespace MySqlDriverCs.Core.Tests
             private IEnumerable<PreparedFieldTypeTest> DataTypes()
             {
                 // numerics
-                yield return new PreparedFieldTypeTest( "TINYINT", new MySQLParameter("value",MySqlDbType.Boolean,ParameterDirection.Input,true),  true );
+                yield return new PreparedFieldTypeTest("TINYINT", new MySQLParameter("value", MySqlDbType.Byte, ParameterDirection.Input, (sbyte)-77), (sbyte)-77);
+                yield return new PreparedFieldTypeTest( "TINYINT(1)", new MySQLParameter("value",MySqlDbType.Boolean,ParameterDirection.Input,true),  true );
                 yield return new PreparedFieldTypeTest( "TINYINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Byte, ParameterDirection.Input, byte.MaxValue), byte.MaxValue );
                 yield return new PreparedFieldTypeTest( "SMALLINT", new MySQLParameter("value", MySqlDbType.Short, ParameterDirection.Input, short.MinValue), short.MinValue );
                 yield return new PreparedFieldTypeTest( "SMALLINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Short, ParameterDirection.Input, ushort.MaxValue), ushort.MaxValue );
-                yield return new PreparedFieldTypeTest( "MEDIUMINT", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, 16777215), 16777215 );
+                yield return new PreparedFieldTypeTest( "MEDIUMINT", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, 16777215/2), 16777215/2 );
                 yield return new PreparedFieldTypeTest( "MEDIUMINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, (uint)16777215), (uint)16777215 );
                 yield return new PreparedFieldTypeTest( "INT", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, int.MinValue), int.MinValue );
                 yield return new PreparedFieldTypeTest( "INT UNSIGNED", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, uint.MaxValue), uint.MaxValue );
                 yield return new PreparedFieldTypeTest( "BIGINT", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, long.MinValue), long.MinValue );
                 yield return new PreparedFieldTypeTest( "BIGINT UNSIGNED", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, ulong.MaxValue), ulong.MaxValue );
-                yield return new PreparedFieldTypeTest( "DECIMAL(18,6)", new MySQLParameter("value", MySqlDbType.Decimal, ParameterDirection.Input, 345435.567894m), -345435.567894m );
+                yield return new PreparedFieldTypeTest( "DECIMAL(18,6)", new MySQLParameter("value", MySqlDbType.Decimal, ParameterDirection.Input, -345435.567894m), -345435.567894m );
                 yield return new PreparedFieldTypeTest( "FLOAT", new MySQLParameter("value", MySqlDbType.Float, ParameterDirection.Input, 1.25e-5f), 1.25e-5f );
                 yield return new PreparedFieldTypeTest( "DOUBLE", new MySQLParameter("value", MySqlDbType.Double, ParameterDirection.Input, 345435.567894d), 345435.567894d );
                 yield return new PreparedFieldTypeTest( "BIT(2)", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, (ulong)1), ((ulong)1) );
@@ -373,17 +374,17 @@ namespace MySqlDriverCs.Core.Tests
             using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
                 cmd2.ExecuteNonQuery();
 
-            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,?);", c))
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,@value);", c))
             {
                 cmd3.UsePreparedStatement = false;
                 cmd3.Parameters.Add(inputParameter);
                 cmd3.ExecuteNonQuery();
             }
 
-            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
+            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=@id", c))
             {
                 cmd.UsePreparedStatement = false;
-                var p = new MySQLParameter("id", MySqlDbType.Int);
+                var p = new MySQLParameter("@id", MySqlDbType.Int);
                 p.Value = 0;
                 cmd.Parameters.Add(p);
 
