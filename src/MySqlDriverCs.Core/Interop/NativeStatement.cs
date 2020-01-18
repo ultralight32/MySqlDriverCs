@@ -129,33 +129,7 @@ namespace MySQLDriverCS.Interop
             else throw new NotSupportedException();
         }
 
-        [DllImport("libmysqlclient.so", EntryPoint = "mysql_stmt_bind_result")]
-        public static extern sbyte mysql_stmt_bind_result32_linux(IntPtr stmt, MYSQL_BIND_32[] result);
-        [DllImport("libmysql.dll", EntryPoint = "mysql_stmt_bind_result")]
-        public static extern sbyte mysql_stmt_bind_result32_win32(IntPtr stmt, MYSQL_BIND_32[] result);
-
-        public sbyte mysql_stmt_bind_result32(MYSQL_BIND_32[] result)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return mysql_stmt_bind_result32_win32(stmt, result);
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return mysql_stmt_bind_result32_linux(stmt, result);
-            else throw new NotSupportedException();
-        }
-
-        [DllImport("libmysqlclient.so", EntryPoint = "mysql_stmt_bind_param")]
-        public static extern sbyte mysql_stmt_bind_param32_linux(IntPtr stmt, MYSQL_BIND_32[] parms);
-        [DllImport("libmysql.dll", EntryPoint = "mysql_stmt_bind_param")]
-        public static extern sbyte mysql_stmt_bind_param32_win32(IntPtr stmt, MYSQL_BIND_32[] parms);
-
-        public sbyte mysql_stmt_bind_param32(MYSQL_BIND_32[] parms)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return mysql_stmt_bind_param32_win32(stmt, parms);
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return mysql_stmt_bind_param32_linux(stmt, parms);
-            else throw new NotSupportedException();
-        }
+     
 
         [DllImport("libmysqlclient.so", EntryPoint = "mysql_stmt_affected_rows")]
         public static extern uint mysql_stmt_affected_rows_linux(IntPtr stmt);
@@ -271,19 +245,7 @@ namespace MySQLDriverCS.Interop
             else throw new NotSupportedException();
         }
 
-        [DllImport("libmysqlclient.so", EntryPoint = "mysql_stmt_fetch_column")]
-        public static extern sbyte mysql_stmt_fetch_column32_linux(IntPtr stmt, MYSQL_BIND_32[] result, uint column, uint offset);
-        [DllImport("libmysql.dll", EntryPoint = "mysql_stmt_fetch_column")]
-        public static extern sbyte mysql_stmt_fetch_column32_win32(IntPtr stmt, MYSQL_BIND_32[] result, uint column, uint offset);
-
-        public sbyte mysql_stmt_fetch_column32(MYSQL_BIND_32[] result, uint column, uint offset)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return mysql_stmt_fetch_column32_win32(stmt, result, column, offset);
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return mysql_stmt_fetch_column32_linux(stmt, result, column, offset);
-            else throw new NotSupportedException();
-        }
+      
 
         [DllImport("libmysqlclient.so", EntryPoint = "mysql_stmt_fetch_column")]
         public static extern sbyte mysql_stmt_fetch_column64_linux(IntPtr stmt, MYSQL_BIND_64[] result, uint column, uint offset);

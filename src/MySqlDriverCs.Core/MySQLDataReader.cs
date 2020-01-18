@@ -81,7 +81,7 @@ namespace MySQLDriverCS
         // In order support CommandBehavior.CloseConnection
         internal unsafe MySQLDataReader(IntPtr resultPtr, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
         {
-            _mysqlFieldFactory = new MYSQL_FIELD_FACTORY(_connection.NativeConnection);
+
             nativeResult = new NativeResult(resultPtr);
             // Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
             // Save if close connection after close MySQLDataReader
@@ -96,7 +96,7 @@ namespace MySQLDriverCS
             for (i = 0; i < num_fields; i++)
             {
 
-                IMySqlField field = _mysqlFieldFactory.GetInstance();
+                IMySqlField field = new MYSQL_FIELD_VERSION_5_64();
                 var ptr = nativeResult.mysql_fetch_field_direct(i);
                 Marshal.PtrToStructure(ptr, field);
 
@@ -201,6 +201,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_GEOMETRY)
                     {
+                        // TODO: returns empty string
                         string val = GetValidString(ptr);
                         dr[(int)i] = val;
                     }
@@ -371,7 +372,7 @@ namespace MySQLDriverCS
             return dt;
         }
         int rowpos = -1;
-        private MYSQL_FIELD_FACTORY _mysqlFieldFactory;
+
 
         /// <summary>
 		/// No more results expected

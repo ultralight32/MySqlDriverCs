@@ -172,9 +172,9 @@ namespace MySQLDriverCS
             BindParameters();
             if (m_field_count == 0)
             {
-                using (var result_metadata = new NativeResultMetadata(stmt))
+                using (var resultMetadata = new NativeResultMetadata(stmt))
                 {
-                    m_field_count = result_metadata.mysql_num_fields();
+                    m_field_count = resultMetadata.mysql_num_fields();
                 }
             }
             if (stmt.mysql_stmt_execute() != 0)
@@ -184,10 +184,9 @@ namespace MySQLDriverCS
             else
             {
                 MySqlCursorDataReaderBase ret;
-                if (MySQLUtils.RunningOn64x)
+
                     ret = new MySqlCursorDataReader64(m_field_count,  stmt, m_parameters, this.connection, closeConnection);
-                else
-                    ret = new MySqlCursorDataReader32(m_field_count,  stmt, m_parameters, this.connection, this, closeConnection);
+
                 MySQLDataReader dr = ret;
                 return dr;
             }

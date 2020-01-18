@@ -71,14 +71,14 @@ namespace MySQLDriverCS
                 fields = mysql_stmt.result.data;
             }
 
-            m_fields = (IMySqlField[])Array.CreateInstance(new MYSQL_FIELD_FACTORY(_connection.NativeConnection).GetInstance().GetType(), m_fieldCount);
+            m_fields = (IMySqlField[])Array.CreateInstance(new MYSQL_FIELD_VERSION_5_64().GetType(), m_fieldCount);
 
             long pointer = fields.ToInt64();
             int index;
             m_row = new MYSQL_BIND_64[m_fieldCount];
             for (index = 0; index < m_fieldCount; index++)
             {
-                IMySqlField fieldMetadata = new MYSQL_FIELD_FACTORY(_connection.NativeConnection).GetInstance();
+                IMySqlField fieldMetadata = new MYSQL_FIELD_VERSION_5_64();
                 IntPtr ptr = new IntPtr(pointer);
                 Marshal.PtrToStructure(ptr, fieldMetadata);
                 pointer += Marshal.SizeOf(fieldMetadata);
@@ -115,7 +115,7 @@ namespace MySQLDriverCS
             {
                 MYSQL_BIND_64[] newbind = new MYSQL_BIND_64[1];
                 newbind[0] = new MYSQL_BIND_64();
-                IMySqlField ft = new MYSQL_FIELD_FACTORY(_connection.NativeConnection).GetInstance();
+                IMySqlField ft = new MYSQL_FIELD_VERSION_5_64();
                 ft.Type = (uint)enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;
                 newbind[0].InitForBind(ft);

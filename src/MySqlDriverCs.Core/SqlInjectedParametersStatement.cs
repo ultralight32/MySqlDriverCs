@@ -12,11 +12,11 @@ namespace MySQLDriverCS
     /// <summary>
     /// Summary description for Statement.
     /// </summary>
-    internal class DirectStatement : Statement
+    internal class SqlInjectedParametersStatement : Statement
     {
         protected string repQuery;
 
-        public DirectStatement(MySQLConnection connection, string query)
+        public SqlInjectedParametersStatement(MySQLConnection connection, string query)
         {
             this.connection = connection;
             this.query = query;

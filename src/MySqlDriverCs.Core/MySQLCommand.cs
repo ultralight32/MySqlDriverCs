@@ -263,13 +263,12 @@ namespace MySQLDriverCS
 
 					if (UsePreparedStatement)
                     {
-                        if (MySQLUtils.RunningOn64x)
+               
                             pStmt = new PreparedStatement64(connection, _query);
-                        else
-                            pStmt = new PreparedStatement32(connection, _query);
+         
                     }
                     else
-						pStmt = new DirectStatement(connection, _query);
+						pStmt = new SqlInjectedParametersStatement(connection, _query);
 				}
 				return pStmt;
 			}
