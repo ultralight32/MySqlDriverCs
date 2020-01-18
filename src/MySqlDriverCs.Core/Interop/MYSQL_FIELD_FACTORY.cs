@@ -79,6 +79,7 @@ namespace MySQLDriverCS.Interop
                 case enum_field_types.MYSQL_TYPE_TIME2:
                 case enum_field_types.MYSQL_TYPE_TIME:
                 case enum_field_types.MYSQL_TYPE_NEWDATE:
+                case enum_field_types.MYSQL_TYPE_YEAR:
                     return typeof(DateTime);
                 case enum_field_types.MYSQL_TYPE_STRING:
                 case enum_field_types.MYSQL_TYPE_VARCHAR:
@@ -88,8 +89,6 @@ namespace MySQLDriverCS.Interop
                     return typeof(float);
                 case enum_field_types.MYSQL_TYPE_NULL:
                     return null;
-                case enum_field_types.MYSQL_TYPE_YEAR:
-                    throw new NotSupportedException();
                 case enum_field_types.MYSQL_TYPE_BIT:
                     return typeof(ulong);
                 case enum_field_types.MYSQL_TYPE_JSON:

@@ -55,6 +55,24 @@ namespace MySQLDriverCS
         protected bool m_CloseConnection = false;
         internal MySQLConnection connection;
         internal System.Globalization.NumberFormatInfo MySQLNumberFormatInfo = new CultureInfo("en-US").NumberFormat;
+
+
+        /// <summary>
+        /// Get unmanaged string or throw exception
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <returns></returns>
+        private string GetValidString(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+                throw new ArgumentNullException(nameof(ptr));
+            var s = Marshal.PtrToStringAnsi(ptr);
+            if (s == null)
+                throw new ArgumentNullException(nameof(ptr));
+            return s;
+        }
+
+
         #region Constructor & destructor
 
         internal MySQLDataReader() { }
@@ -121,15 +139,19 @@ namespace MySQLDriverCS
 
                     IntPtr ptr = Marshal.ReadIntPtr(myrow, (int)i * sizeof(IntPtr));
 
-                    if (mySqlField.FieldType == typeof(bool))
+                    if (ptr == IntPtr.Zero)
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        dr[(int)i] = Convert.DBNull;
+                    }
+                    else if (mySqlField.FieldType == typeof(bool))
+                    {
+                        string val = GetValidString(ptr);
                         dr[(int)i] = val != "0";
                     }
                     else if (mySqlField.FieldType == typeof(byte[]))
                     {
                         byte[] val = null;
-                        if (Marshal.PtrToStringAnsi(ptr) != null)
+                        if (GetValidString(ptr) != null)
                         {
                             int length = (int)lengths[i];
 
@@ -144,7 +166,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(short))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -156,7 +178,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(ushort))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -168,7 +190,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(byte))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -180,7 +202,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(sbyte))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -192,7 +214,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(decimal))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -202,7 +224,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(double))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -212,7 +234,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(float))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -222,7 +244,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(int))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -232,7 +254,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(uint))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -242,7 +264,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(long))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
@@ -254,9 +276,7 @@ namespace MySQLDriverCS
                     {
                         if (mySqlField.Type == enum_field_types.MYSQL_TYPE_BIT)
                         {
-                            if (ptr == IntPtr.Zero)
-                                dr[(int)i] = Convert.DBNull;
-                            else
+
                             {
                                 int byteCount;
                                 if (mySqlField.Length <= 8)
@@ -282,12 +302,12 @@ namespace MySQLDriverCS
                                 }
 
 
-                                dr[(int) i] = BitConverter.ToInt64(buffer, 0);
+                                dr[(int)i] = BitConverter.ToInt64(buffer, 0);
                             }
                         }
                         else
                         {
-                            string val = Marshal.PtrToStringAnsi(ptr);
+                            string val = GetValidString(ptr);
                             if (val == null)
                                 dr[(int)i] = Convert.DBNull;
                             else
@@ -296,14 +316,37 @@ namespace MySQLDriverCS
                             }
                         }
                     }
-
-                    else if (mySqlField.FieldType == System.Type.GetType("System.DateTime"))
+                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_DATE || mySqlField.Type == enum_field_types.MYSQL_TYPE_DATE)
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
+                        dr[(int)i] = DateTime.ParseExact(val, "yyyy-MM-dd", CultureInfo.InvariantCulture.DateTimeFormat);
+                    }
+                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_DATETIME || mySqlField.Type == enum_field_types.MYSQL_TYPE_DATETIME2
+                                                                                     || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP
+                                                                                     || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2)
+                    {
+                        string val = GetValidString(ptr);
+                        dr[(int)i] = DateTime.ParseExact(val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
+                    }
+                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME2)
+                    {
+                        string val = GetValidString(ptr);
+                        dr[(int)i] = DateTime.ParseExact("0001-01-01 "+val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
+                    }
+                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_YEAR)
+                    {
+                        string val = GetValidString(ptr);
+                        dr[(int)i] = DateTime.ParseExact(val, "yyyy", CultureInfo.InvariantCulture.DateTimeFormat);
+                    }
+                    else if (mySqlField.FieldType == typeof(DateTime))
+                    {
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else
                         {
+
+
                             DateTimeFormatInfo format = new DateTimeFormatInfo();
                             if (val.Length > 20)
                             {
@@ -324,7 +367,7 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(string))
                     {
-                        string val = Marshal.PtrToStringAnsi(ptr);
+                        string val = GetValidString(ptr);
                         if (val == null)
                             dr[(int)i] = Convert.DBNull;
                         else

@@ -29,41 +29,47 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
-        public class CalculatorTestData : IEnumerable<object[]>
+        public class FieldTypeTestData : IEnumerable<object[]>
         {
             public IEnumerator<object[]> GetEnumerator()
             {
+                foreach (var tuple in DataTypes())
+                {
+
+                    // with value
+                    yield return tuple;
+
+                    // with null
+                    tuple[1] = "NULL";
+                    tuple[2] = Convert.DBNull;
+                    yield return tuple;
+                }
+                
+            }
+
+            private IEnumerable<object[]> DataTypes()
+            {
                 yield return new object[] { "TINYINT", "1", true };
-                yield return new object[] { "TINYINT UNSIGNED", byte.MaxValue.ToString(CultureInfo.InvariantCulture),byte.MaxValue };
-                yield return new object[] { "SMALLINT", "-32768",short.MinValue};
+                yield return new object[] { "TINYINT UNSIGNED", byte.MaxValue.ToString(CultureInfo.InvariantCulture), byte.MaxValue };
+                yield return new object[] { "SMALLINT", "-32768", short.MinValue };
                 yield return new object[] { "SMALLINT UNSIGNED", "65535", ushort.MaxValue };
                 yield return new object[] { "MEDIUMINT", "-8388608", (int)-8388608 };
                 yield return new object[] { "MEDIUMINT UNSIGNED", "16777215", (uint)16777215 };
                 yield return new object[] { "INT", "-2147483648", int.MinValue };
-                yield return new object[] { "INT UNSIGNED", "4294967295", uint.MaxValue};
+                yield return new object[] { "INT UNSIGNED", "4294967295", uint.MaxValue };
                 yield return new object[] { "BIGINT", "-9223372036854775808", long.MinValue };
                 yield return new object[] { "BIGINT UNSIGNED", "18446744073709551615", ulong.MaxValue };
                 yield return new object[] { "DECIMAL(18,6)", "-345435.567894", -345435.567894m };
                 yield return new object[] { "DECIMAL(18,6) UNSIGNED", "345435.567894", 345435.567894m };
                 yield return new object[] { "FLOAT", "1.25e-5", 1.25e-5f };
                 yield return new object[] { "DOUBLE", "345435.567894", 345435.567894d };
-                yield return new object[] { "BIT(2)", "B'01'", ((ulong)1),  };
+                yield return new object[] { "BIT(2)", "B'01'", ((ulong)1), };
+                yield return new object[] { "DATE", "'0001-01-01'", new DateTime(1, 1, 1), };
+                yield return new object[] { "TIME", "'13:40:45'", new DateTime(1, 1, 1, 13, 40, 45) };
+                yield return new object[] { "DATETIME", "'2020-12-11 13:40:45'", new DateTime(2020, 12, 11, 13, 40, 45) };
+                yield return new object[] { "TIMESTAMP", "'2020-12-11 13:40:45'", new DateTime(2020, 12, 11, 13, 40, 45) };
+                yield return new object[] { "YEAR", "2020", new DateTime(2020, 1, 1) };
 
-                yield return new object[] { "TINYINT", "NULL", Convert.DBNull };
-                yield return new object[] { "TINYINT UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "SMALLINT", "NULL", Convert.DBNull };
-                yield return new object[] { "SMALLINT UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "MEDIUMINT", "NULL", Convert.DBNull };
-                yield return new object[] { "MEDIUMINT UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "INT", "NULL", Convert.DBNull };
-                yield return new object[] { "INT UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "BIGINT", "NULL", Convert.DBNull };
-                yield return new object[] { "BIGINT UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "DECIMAL(18,6)", "NULL", Convert.DBNull };
-                yield return new object[] { "DECIMAL(18,6) UNSIGNED", "NULL", Convert.DBNull };
-                yield return new object[] { "FLOAT", "NULL", Convert.DBNull };
-                yield return new object[] { "DOUBLE", "NULL", Convert.DBNull };
-                yield return new object[] { "BIT(2)", "NULL", Convert.DBNull };
             }
 
 
@@ -74,7 +80,7 @@ namespace MySqlDriverCs.Core.Tests
         }
 
         [Theory]
-        [ClassData(typeof(CalculatorTestData))]
+        [ClassData(typeof(FieldTypeTestData))]
         public void ExecuteScalarForNumericTypes(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
         {
             using (var c = new MySQLConnection(ConnectionString))
@@ -106,7 +112,7 @@ namespace MySqlDriverCs.Core.Tests
         }
 
         [Theory]
-        [ClassData(typeof(CalculatorTestData))]
+        [ClassData(typeof(FieldTypeTestData))]
         public void ExecuteDataReaderForNumericTypes(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
         {
             using (var c = new MySQLConnection(ConnectionString))
