@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using MySqlDriverCs;
@@ -292,6 +293,30 @@ namespace MySQLDriverCS.Interop
                     }
                     else throw new ArgumentOutOfRangeException(nameof(value));
                 }
+                else if (buffer_type == enum_field_types.MYSQL_TYPE_INT24)
+                {
+                    if (value is int)
+                    {
+                        var b = (int)value;
+                        if (buffer != IntPtr.Zero)
+                            Marshal.FreeHGlobal(buffer);
+                        buffer = Marshal.AllocHGlobal(3);
+                        var bx = BitConverter.GetBytes(b).Take(3).ToArray();
+                        Marshal.Copy(bx,0,buffer,3);
+                        is_unsigned = 0;
+                    }
+                    else if (value is uint)
+                    {
+                        var b = (uint)value;
+                        if (buffer != IntPtr.Zero)
+                            Marshal.FreeHGlobal(buffer);
+                        buffer = Marshal.AllocHGlobal(3);
+                        var bx = BitConverter.GetBytes(b).Take(3).ToArray();
+                        Marshal.Copy(bx, 0, buffer, 3);
+                        is_unsigned = 1;
+                    }
+                    else throw new ArgumentOutOfRangeException(nameof(value));
+                }
                 else if (type == typeof(string))
                 {
                     if (buffer != IntPtr.Zero)
@@ -402,6 +427,22 @@ namespace MySQLDriverCS.Interop
                     return Marshal.ReadInt16(buffer);
             }
 
+
+            if (buffer_type == enum_field_types.MYSQL_TYPE_INT24)
+            {
+                var readInt16 = Marshal.ReadInt16(buffer);
+                var readByte = Marshal.ReadByte(buffer, 2);
+                var b = BitConverter.GetBytes(readInt16).Concat(BitConverter.GetBytes(readByte)).Concat(new byte[] { (byte) (readByte>127?0xFF:0) }).ToArray();
+                if (is_unsigned != 0)
+                {
+                    return BitConverter.ToUInt32(b, 0);
+                }
+                else
+                {
+                    return BitConverter.ToInt32(b, 0);
+                }
+            }
+
             if (buffer_type == enum_field_types.MYSQL_TYPE_LONG_BLOB ||
                 buffer_type == enum_field_types.MYSQL_TYPE_MEDIUM_BLOB ||
                 buffer_type == enum_field_types.MYSQL_TYPE_TINY_BLOB ||
@@ -426,9 +467,7 @@ namespace MySQLDriverCS.Interop
                 case enum_field_types.MYSQL_TYPE_BIT:
                     ret = typeof(ulong);
                     break;
-                case enum_field_types.MYSQL_TYPE_BLOB:
-                    ret = typeof(sbyte[]);
-                    break;
+             
                 case enum_field_types.MYSQL_TYPE_DATE:
                     ret = typeof(MYSQL_TIME);
                     break;
@@ -448,13 +487,7 @@ namespace MySQLDriverCS.Interop
                     ret = typeof(int);
                     break;
 
-                case enum_field_types.MYSQL_TYPE_LONG_BLOB:
-                    ret = typeof(sbyte[]);
-                    break;
-
-                case enum_field_types.MYSQL_TYPE_MEDIUM_BLOB:
-                    ret = typeof(sbyte[]);
-                    break;
+              
                 //case FieldTypes5.MYSQL_TYPE_NEWDATE: return typeof(long);
                 case enum_field_types.MYSQL_TYPE_NEWDECIMAL:
                     ret = typeof(string);
@@ -477,9 +510,7 @@ namespace MySQLDriverCS.Interop
                 case enum_field_types.MYSQL_TYPE_TINY:
                     ret = typeof(byte);
                     break;
-                case enum_field_types.MYSQL_TYPE_TINY_BLOB:
-                    ret = typeof(sbyte[]);
-                    break;
+      
                 case enum_field_types.MYSQL_TYPE_VAR_STRING:
                     ret = typeof(string);
                     break;
