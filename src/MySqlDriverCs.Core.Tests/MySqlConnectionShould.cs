@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace MySqlDriverCs.Core.Tests
 {
-    public class MySqlCommandShould : BaseTest
+    public class MySqlCommandShould : BaseTest, IDisposable
     {
         public MySqlCommandShould(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
@@ -44,11 +44,12 @@ namespace MySqlDriverCs.Core.Tests
                     tuple[2] = Convert.DBNull;
                     yield return tuple;
                 }
-                
+
             }
 
             private IEnumerable<object[]> DataTypes()
             {
+                // numerics
                 yield return new object[] { "TINYINT", "1", true };
                 yield return new object[] { "TINYINT UNSIGNED", byte.MaxValue.ToString(CultureInfo.InvariantCulture), byte.MaxValue };
                 yield return new object[] { "SMALLINT", "-32768", short.MinValue };
@@ -64,12 +65,42 @@ namespace MySqlDriverCs.Core.Tests
                 yield return new object[] { "FLOAT", "1.25e-5", 1.25e-5f };
                 yield return new object[] { "DOUBLE", "345435.567894", 345435.567894d };
                 yield return new object[] { "BIT(2)", "B'01'", ((ulong)1), };
+
+                // time
                 yield return new object[] { "DATE", "'0001-01-01'", new DateTime(1, 1, 1), };
                 yield return new object[] { "TIME", "'13:40:45'", new DateTime(1, 1, 1, 13, 40, 45) };
                 yield return new object[] { "DATETIME", "'2020-12-11 13:40:45'", new DateTime(2020, 12, 11, 13, 40, 45) };
                 yield return new object[] { "TIMESTAMP", "'2020-12-11 13:40:45'", new DateTime(2020, 12, 11, 13, 40, 45) };
                 yield return new object[] { "YEAR", "2020", new DateTime(2020, 1, 1) };
 
+                // varchars
+                yield return new object[] { "VARCHAR(20) CHARACTER SET utf8", "'some text'", "some text" };
+                yield return new object[] { "CHAR(20) CHARACTER SET utf8", "'some text'", "some text"  };
+                yield return new object[] { "TEXT CHARACTER SET utf8", "'some text'", "some text" };
+                yield return new object[] { "TINYTEXT CHARACTER SET utf8", "'some text'", "some text" };
+                yield return new object[] { "MEDIUMTEXT CHARACTER SET utf8", "'some text'", "some text" };
+                yield return new object[] { "LONGTEXT CHARACTER SET utf8", "'some text'", "some text" };
+                yield return new object[] { "BINARY(20)", "'some text'", "some text" };
+                yield return new object[] { "VARBINARY(20)", "'some text'", "some text" };
+
+                // enums & sets
+                yield return new object[] { "ENUM('a','b','c') CHARACTER SET binary", "'a'", "a" };
+                yield return new object[] { "SET('a', 'b', 'c', 'd')", "'d,a,d'", "a,d" };
+
+                // blobs
+                yield return new object[] { "BLOB", "X'01AF'", new byte[]{0x01,0xaf} };
+                yield return new object[] { "TINYBLOB", "X'01AF'", new byte[] { 0x01, 0xaf } };
+                yield return new object[] { "MEDIUMBLOB", "X'01AF'", new byte[] { 0x01, 0xaf } };
+                yield return new object[] { "LONGBLOB", "X'01AF'", new byte[] { 0x01, 0xaf } };
+
+                // geometry
+                //yield return new object[] { "POINT", "POINT(1,1)", new MySqlPoint(1,1), };
+                //yield return new object[] { "LINESTRING", "ST_LineStringFromText('LINESTRING(0 0,1 1,2 2)')", new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(1, 1), new MySqlPoint(2, 2)), };
+                //yield return new object[] { "POLYGON", "ST_PolygonFromText('POLYGON((0 0,10 0,10 10,0 10,0 0),(5 5,7 5,7 7,5 7, 5 5))')", new MySqlPolygon(new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(10,0), new MySqlPoint(10,10), new MySqlPoint(0,10), new MySqlPoint(0,0)), new MySqlLineString(new MySqlPoint(5,5), new MySqlPoint(7,5), new MySqlPoint(7,7), new MySqlPoint(5,7), new MySqlPoint(5,5))),  };
+                //yield return new object[] { "GEOMETRYCOLLECTION", "ST_GeomCollFromText('GEOMETRYCOLLECTION(POINT(1 1),LINESTRING(0 0,1 1,2 2,3 3,4 4))')", new MySqlGeometryCollection(new MySqlPoint(1,1), new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(1,1), new MySqlPoint(2,2), new MySqlPoint(3,3), new MySqlPoint(4,4))), };
+
+                // json
+                yield return new object[] { "JSON", "'{\"key1\": \"value1\", \"key2\": \"value2\"}'", "{\"key1\": \"value1\", \"key2\": \"value2\"}" };
             }
 
 
@@ -79,45 +110,61 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
+        private MySQLConnection _cachedConnection = null;
+
+        private MySQLConnection CachedConnection
+        {
+            get
+            {
+                if (_cachedConnection == null)
+                {
+                    var cc = new MySQLConnection(ConnectionString);
+                    cc.Open();
+                    _cachedConnection = cc;
+                }
+
+                return _cachedConnection;
+            }
+        }
+
         [Theory]
         [ClassData(typeof(FieldTypeTestData))]
-        public void ExecuteScalarForNumericTypes(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
+        public void ExecuteScalarForAnyFieldType(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
         {
-            using (var c = new MySQLConnection(ConnectionString))
+           
+
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,{insertedLiteral});", c)) cmd3.ExecuteNonQuery();
+
+            using (var cmd = new MySQLCommand("select COL_VALUE from number_type_test where id=0", c))
             {
-                c.Open();
-
-                using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
-                    cmd1.ExecuteNonQuery();
-
-                using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
-                    cmd2.ExecuteNonQuery();
-
-                using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,{insertedLiteral});", c)) cmd3.ExecuteNonQuery();
-
-                using (var cmd = new MySQLCommand("select COL_VALUE from number_type_test where id=0", c))
+                object executeScalar = cmd.ExecuteScalar();
+                Assert.NotNull(executeScalar);
+                if (expectedValue == null)
+                    Assert.Null(executeScalar);
+                else
                 {
-                    object executeScalar = cmd.ExecuteScalar();
                     Assert.NotNull(executeScalar);
-                    if (expectedValue == null)
-                        Assert.Null(executeScalar);
-                    else
-                    {
-                        Assert.NotNull(executeScalar);
-                        Assert.IsType(expectedValue.GetType(), executeScalar);
-                        Assert.Equal(expectedValue, executeScalar);
-                    }
+                    Assert.IsType(expectedValue.GetType(), executeScalar);
+                    Assert.Equal(expectedValue, executeScalar);
                 }
             }
         }
 
         [Theory]
         [ClassData(typeof(FieldTypeTestData))]
-        public void ExecuteDataReaderForNumericTypes(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
+        public void ExecuteDataReaderForAnyFieldType(string mySqlTypeDeclaration, string insertedLiteral, object expectedValue)
         {
-            using (var c = new MySQLConnection(ConnectionString))
+            var c = CachedConnection;
             {
-                c.Open();
+               
 
                 using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
                     cmd1.ExecuteNonQuery();
@@ -143,6 +190,10 @@ namespace MySqlDriverCs.Core.Tests
                         {
                             Assert.NotNull(executeScalar);
                             Assert.IsType(expectedValue.GetType(), executeScalar);
+                            if (expectedValue is string)
+                                expectedValue = "'" + expectedValue.ToString() + "'";
+                            if (executeScalar is string)
+                                executeScalar = "'" + executeScalar.ToString() + "'";
                             Assert.Equal(expectedValue, executeScalar);
                         }
                     }
@@ -243,6 +294,15 @@ PRIMARY KEY (id));
 ", c))
             {
                 cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_cachedConnection != null)
+            {
+                _cachedConnection.Dispose();
+                _cachedConnection = null;
             }
         }
     }

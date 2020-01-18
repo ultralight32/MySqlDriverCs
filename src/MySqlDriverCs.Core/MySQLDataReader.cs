@@ -35,6 +35,7 @@ using System.Runtime.InteropServices;
 using System.Globalization;
 using System.Data.Common;
 using System.IO;
+using System.Linq;
 using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS
@@ -102,11 +103,11 @@ namespace MySQLDriverCS
 
                 dt.Columns.Add(field.Name);
 
-                Type ftype = _mysqlFieldFactory.MysqltoNetType(field);
-                var mySqlField = new MySqlField(field.Name, (enum_field_types)field.Type, field.MaxLength, field.Length, field.Flags, ftype);
-                if (ftype != null)
+                //Type ftype = MySqlField.MysqltoNetType(field);
+                var mySqlField = new MySqlField(field.Name, (enum_field_types)field.Type, field.MaxLength, field.Length, field.Flags);
+                if (mySqlField.FieldType != null)
                 {
-                    dt.Columns[field.Name].DataType = ftype;
+                    dt.Columns[field.Name].DataType = mySqlField.FieldType;
                     if (dt.Columns[field.Name].DataType == System.Type.GetType("System.Byte[]"))
                     {
                         dt.Columns[field.Name].ExtendedProperties.Add("max_length", (int)field.MaxLength);
@@ -145,132 +146,63 @@ namespace MySQLDriverCS
                     }
                     else if (mySqlField.FieldType == typeof(bool))
                     {
-                        string val = GetValidString(ptr);
-                        dr[(int)i] = val != "0";
+                        dr[(int)i] = GetValidString(ptr) != "0";
                     }
                     else if (mySqlField.FieldType == typeof(byte[]))
                     {
-                        byte[] val = null;
-                        if (GetValidString(ptr) != null)
-                        {
-                            int length = (int)lengths[i];
-
-                            val = new byte[length];
+                      
+                            int length = (int) lengths[i];
+                            var val = new byte[length];
                             Marshal.Copy(ptr, val, 0, length);
-                        }
 
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                            dr[(int)i] = val;
+                            dr[(int) i] = val;
+                       
                     }
                     else if (mySqlField.FieldType == typeof(short))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-
-                            dr[(int)i] = Convert.ToInt16(val);
-
-                        }
+                        dr[(int) i] = Convert.ToInt16(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(ushort))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-
-                            dr[(int)i] = Convert.ToUInt16(val);
-
-                        }
+                        dr[(int) i] = Convert.ToUInt16(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(byte))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-
-                            dr[(int)i] = Convert.ToByte(val);
-
-                        }
+                        dr[(int) i] = Convert.ToByte(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(sbyte))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-
-                            dr[(int)i] = Convert.ToSByte(val);
-
-                        }
+                        dr[(int) i] = Convert.ToSByte(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(decimal))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToDecimal(val, CultureInfo.InvariantCulture.NumberFormat);
-                        }
+                        dr[(int) i] = Convert.ToDecimal(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
                     else if (mySqlField.FieldType == typeof(double))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToDouble(val, CultureInfo.InvariantCulture.NumberFormat);
-                        }
+                        dr[(int) i] = Convert.ToDouble(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
                     else if (mySqlField.FieldType == typeof(float))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToSingle(val, CultureInfo.InvariantCulture.NumberFormat);
-                        }
+                        dr[(int) i] = Convert.ToSingle(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
                     else if (mySqlField.FieldType == typeof(int))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToInt32(val);
-                        }
+                        dr[(int) i] = Convert.ToInt32(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(uint))
                     {
-                        string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToUInt32(val);
-                        }
+                        dr[(int) i] = Convert.ToUInt32(GetValidString(ptr));
                     }
                     else if (mySqlField.FieldType == typeof(long))
                     {
+                        dr[(int)i] = Convert.ToInt64(GetValidString(ptr));
+                        
+                    }
+                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_GEOMETRY)
+                    {
                         string val = GetValidString(ptr);
-                        if (val == null)
-                            dr[(int)i] = Convert.DBNull;
-                        else
-                        {
-                            dr[(int)i] = Convert.ToInt64(val);
-                        }
+                        dr[(int)i] = val;
                     }
                     else if (mySqlField.FieldType == typeof(ulong))
                     {
@@ -331,7 +263,7 @@ namespace MySQLDriverCS
                     else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME2)
                     {
                         string val = GetValidString(ptr);
-                        dr[(int)i] = DateTime.ParseExact("0001-01-01 "+val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
+                        dr[(int)i] = DateTime.ParseExact("0001-01-01 " + val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
                     }
                     else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_YEAR)
                     {
@@ -704,5 +636,262 @@ namespace MySQLDriverCS
             return dt.Rows.GetEnumerator();
         }
         #endregion
+    }
+
+    public interface IMySqlGeometryObject
+    {
+
+    }
+    public class MySqlPoint : IMySqlGeometryObject, IEquatable<MySqlPoint>, IReadOnlyList<double>
+    {
+        private readonly double[] _coordinates;
+
+        public MySqlPoint(params double[] coordinates)
+        {
+            if (coordinates == null) throw new ArgumentNullException(nameof(coordinates));
+            _coordinates = coordinates.ToArray();
+        }
+
+        public double this[int index] => _coordinates[index];
+
+        public bool Equals(MySqlPoint other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return _coordinates.SequenceEqual(other._coordinates);
+        }
+
+        public IEnumerator<double> GetEnumerator()
+        {
+            return ((IEnumerable<double>)_coordinates).GetEnumerator();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MySqlPoint)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _coordinates.Aggregate(0, (current, coordinate) => current ^ coordinate.GetHashCode());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static bool operator ==(MySqlPoint left, MySqlPoint right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MySqlPoint left, MySqlPoint right)
+        {
+            return !Equals(left, right);
+        }
+
+        public int Count => _coordinates.Length;
+        public override string ToString()
+        {
+            return "POINT(" + string.Join(", ", _coordinates.Select(x => x.ToString(CultureInfo.InvariantCulture))) + ")";
+        }
+    }
+
+    public class MySqlLineString : IMySqlGeometryObject, IEquatable<MySqlLineString>, IReadOnlyList<MySqlPoint>
+    {
+        private readonly MySqlPoint[] _points;
+
+        public MySqlLineString(params MySqlPoint[] points)
+        {
+            if (points == null) throw new ArgumentNullException(nameof(points));
+            _points = points.ToArray();
+        }
+        public MySqlPoint this[int index]
+        {
+            get { return _points[index]; }
+        }
+
+        public bool Equals(MySqlLineString other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return _points.SequenceEqual(other._points);
+        }
+
+        public IEnumerator<MySqlPoint> GetEnumerator()
+        {
+            foreach (var point in _points)
+            {
+                yield return point;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MySqlLineString)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _points.Aggregate(0, (current, coordinate) => current ^ coordinate.GetHashCode());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static bool operator ==(MySqlLineString left, MySqlLineString right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MySqlLineString left, MySqlLineString right)
+        {
+            return !Equals(left, right);
+        }
+
+        public int Count => _points.Length;
+
+        public override string ToString()
+        {
+            return "LINESTRING(" + string.Join(", ", _points.Select(x => x.ToString())) + ")";
+        }
+    }
+
+    public class MySqlPolygon : IMySqlGeometryObject, IEquatable<MySqlPolygon>, IReadOnlyList<MySqlLineString>
+    {
+        private readonly MySqlLineString[] _segments;
+
+        public MySqlPolygon(params MySqlLineString[] segments)
+        {
+            _segments = segments ?? throw new ArgumentNullException(nameof(segments));
+        }
+        public MySqlLineString this[int index]
+        {
+            get { return _segments[index]; }
+        }
+
+        public bool Equals(MySqlPolygon other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return _segments.SequenceEqual(other._segments);
+        }
+
+        public IEnumerator<MySqlLineString> GetEnumerator()
+        {
+            foreach (var point in _segments)
+            {
+                yield return point;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MySqlPolygon)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _segments.Aggregate(0, (current, coordinate) => current ^ coordinate.GetHashCode());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static bool operator ==(MySqlPolygon left, MySqlPolygon right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MySqlPolygon left, MySqlPolygon right)
+        {
+            return !Equals(left, right);
+        }
+
+        public int Count => _segments.Length;
+
+        public override string ToString()
+        {
+            return "POLYGON(" + string.Join(", ", _segments.Select(x => x.ToString())) + ")";
+        }
+    }
+
+    public class MySqlGeometryCollection : IMySqlGeometryObject, IEquatable<MySqlGeometryCollection>, IReadOnlyList<IMySqlGeometryObject>
+    {
+        private readonly IMySqlGeometryObject[] _objects;
+
+        public MySqlGeometryCollection(params IMySqlGeometryObject[] objects)
+        {
+            if (objects == null) throw new ArgumentNullException(nameof(objects));
+            this._objects = objects.ToArray();
+        }
+        public IMySqlGeometryObject this[int index]
+        {
+            get { return _objects[index]; }
+        }
+
+        public bool Equals(MySqlGeometryCollection other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return _objects.SequenceEqual(other._objects);
+        }
+
+        public IEnumerator<IMySqlGeometryObject> GetEnumerator()
+        {
+            foreach (var point in _objects)
+            {
+                yield return point;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MySqlGeometryCollection)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _objects.Aggregate(0, (current, coordinate) => current ^ coordinate.GetHashCode());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static bool operator ==(MySqlGeometryCollection left, MySqlGeometryCollection right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MySqlGeometryCollection left, MySqlGeometryCollection right)
+        {
+            return !Equals(left, right);
+        }
+
+        public int Count => _objects.Length;
+
+        public override string ToString()
+        {
+            return "GEOMETRYCOLLECTION(" + string.Join(", ", _objects.Select(x => x.ToString())) + ")";
+        }
     }
 }
