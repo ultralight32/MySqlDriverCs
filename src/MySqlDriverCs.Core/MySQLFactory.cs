@@ -5,65 +5,58 @@
 //Updated in $/Tauro/Deklarit/MySQLDriverCS/MySQLDriverCS.root/MySQLDriverCS/Deklarit/MySQLDriverCS
 //CreateConnectionString implemented
  */
-using System.Data.Common;
+
 using MySqlDriverCs;
+using System.Data;
+using System.Data.Common;
 
 namespace MySQLDriverCS
 {
-	/// <summary>
-	/// 
-	/// </summary>
-	public sealed class MySQLFactory : DbProviderFactory
-	{
-		/// <summary>
-		/// 
-		/// </summary>
-		public static readonly MySQLFactory Instance;
+   
+    public sealed class MySQLFactory
+    {
+   
+        public static readonly MySQLFactory Instance;
 
-		static MySQLFactory()
-		{
-			if (Instance == null)
-				Instance = new MySQLFactory();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
-		public override DbCommand CreateCommand()
-		{
-			return new MySQLCommand();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
-		public override DbConnection CreateConnection()
-		{
-			return new MySQLConnection();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
-		public override DbDataAdapter CreateDataAdapter()
-		{
-			return new MySQLDataAdapter();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
-		public override DbParameter CreateParameter()
-		{
-			return new MySQLParameter();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
-		public override DbConnectionStringBuilder CreateConnectionStringBuilder()
-		{
-			return new DbConnectionStringBuilder();
-		}
-	}
+        static MySQLFactory()
+        {
+            if (Instance == null)
+                Instance = new MySQLFactory();
+        }
+
+    
+        /// <returns></returns>
+        public IDbCommand CreateCommand()
+        {
+            return new MySQLCommand();
+        }
+
+ 
+        /// <returns></returns>
+        public IDbConnection CreateConnection()
+        {
+            return new MySQLConnection();
+        }
+
+
+        /// <returns></returns>
+        public IDbDataAdapter CreateDataAdapter()
+        {
+            return new MySQLDataAdapter();
+        }
+
+
+        /// <returns></returns>
+        public IDataParameter CreateParameter()
+        {
+            return new MySQLParameter();
+        }
+
+  
+        /// <returns></returns>
+        public DbConnectionStringBuilder CreateConnectionStringBuilder()
+        {
+            return new DbConnectionStringBuilder();
+        }
+    }
 }

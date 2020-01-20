@@ -18,9 +18,9 @@ foreach(string platform in new[]{"Win32","Linux"})
     {
          int ndx = template.IndexOf("namespace");
          template=template.Substring(ndx);
-    }
+    } 
     first=false;
-     
+      
 #>
 <#=template #>
 <# 
