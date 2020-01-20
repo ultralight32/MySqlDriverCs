@@ -575,62 +575,7 @@ namespace MySqlDriverCs.Core.Tests
             }
         }
 
-        [Theory]
-        [ClassData(typeof(PreparedFieldTypeTestData))]
-        public void ExecuteDataReaderForAnyFieldTypeWithInjectedStatement(PreparedFieldTypeTest test)
-        {
-            var mySqlTypeDeclaration = test.Declaration;
-            var inputParameter = test.Parameter;
-            var expectedValue = test.Value;
-
-            var c = CachedConnection;
-            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
-                cmd1.ExecuteNonQuery();
-
-            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
-                cmd2.ExecuteNonQuery();
-
-            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,?);", c))
-            {
-                cmd3.UsePreparedStatement = false;
-                cmd3.Parameters.Add(inputParameter);
-                cmd3.ExecuteNonQuery();
-            }
-
-            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
-            {
-                cmd.UsePreparedStatement = false;
-                var p = new MySQLParameter("@id", MySqlDbType.Int);
-                p.Value = 0;
-                cmd.Parameters.Add(p);
-
-                var reader = cmd.ExecuteReader();
-                Assert.True(reader.Read());
-
-                {
-                    var ordinal = reader.GetOrdinal("COL_VALUE");
-                    var executeScalar = reader.GetValue(ordinal);
-
-                    Assert.NotNull(executeScalar);
-                    if (expectedValue == null)
-                        Assert.Null(executeScalar);
-                    else
-                    {
-                        Assert.NotNull(executeScalar);
-                        Assert.IsType(expectedValue.GetType(), executeScalar);
-                        if (expectedValue is string)
-                            expectedValue = "'" + expectedValue.ToString() + "'";
-                        if (executeScalar is string)
-                            executeScalar = "'" + executeScalar.ToString() + "'";
-                        Assert.Equal(expectedValue, executeScalar);
-                    }
-                }
-
-                Assert.False(reader.Read());
-
-
-            }
-        }
+     
 
         private static void DropTableNumberTestType(MySQLConnection c)
         {
