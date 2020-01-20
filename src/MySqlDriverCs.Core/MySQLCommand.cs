@@ -47,6 +47,7 @@
 
 #endregion LICENSE
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -214,36 +215,69 @@ namespace MySQLDriverCS
         /// The following statements can be used as prepared statements: CREATE TABLE, DELETE, DO, INSERT, REPLACE, SELECT,
         /// SET, UPDATE, and most SHOW statements. Other statements are not supported in MySQL 5.0.
         /// </summary>
-        /// <remarks>Use parameter markers ('?') for PreparedStatements instead of named parameters</remarks>
+        /// <remarks>
+        /// Use parameter markers ('?') for PreparedStatements instead of named parameters
+        ///
+        /// This value is ignored if parameters are set
+        /// </remarks>
         public bool UsePreparedStatement { get; set; } = false;
 
-        private Statement CreateStatement()
+     
+        private uint? _fetchSize = null;
+        /// <summary>
+        /// Number of rows to fetch from server at a time when using a cursor.
+        /// </summary>
+        public uint FetchSize
         {
-
-            if (_connection == null || _connection.State != ConnectionState.Open)
-            {
-                throw new MySqlException("Connection must be valid and open.");
-            }
-
-            return (UsePreparedStatement || Parameters.Count > 0) ? (Statement)new PreparedStatement(_connection, CommandText) : new SqlInjectedParametersStatement(_connection, CommandText);
-
-
+            set => _fetchSize = value;
         }
 
+
+        public CursorType CursorType { get; set; } = CursorType.NoCursor;
         /// <summary>
         /// Executes a SQL statement against the Connection object, and returns updated rows count.
         /// </summary>
         /// <returns></returns>
         public int ExecuteNonQuery()
         {
-            using (var statement = CreateStatement())
+            if (Connection == null || Connection.State != ConnectionState.Open)
             {
-                statement.Parameters = Parameters;
-                if (CommandType == CommandType.StoredProcedure)
-                    return statement.ExecuteCall();
-                else
-                    return statement.ExecuteNonQuery();
+                throw new MySqlException("Connection must be valid and open.");
             }
+
+            if (UsePreparedStatement || Parameters.Count > 0)
+            {
+
+                if (CommandType == CommandType.StoredProcedure)
+                {
+                    using (var exec = new PreparedExecute(Connection, "CALL " + CommandText, Parameters, _fetchSize, CursorType))
+                    {
+                        return exec.ExecuteNonQuery();
+                    }
+                }
+                else
+                {
+                    using (var exec = new PreparedExecute(Connection, CommandText, Parameters, _fetchSize, CursorType))
+                    {
+                        return exec.ExecuteNonQuery();
+                    }
+                }
+            }
+            else
+            {
+                if (CommandType == CommandType.StoredProcedure)
+                {
+                    var exec = new DirectStatement(Connection.NativeConnection, "CALL " + CommandText);
+                    return exec.ExecuteNonQuery();
+                }
+                else
+                {
+                    var exec = new DirectStatement(Connection.NativeConnection, CommandText);
+                    return exec.ExecuteNonQuery();
+                }
+            }
+
+
         }
 
         /// <summary>
@@ -265,12 +299,69 @@ namespace MySQLDriverCS
         /// <returns>IDataReader</returns>
         public IDataReader ExecuteReader(bool closeConnection)
         {
-            var statement = CreateStatement();
-            statement.Parameters = Parameters;
-            _pendingDisposeStatements.Add(statement);
-            return statement.ExecuteReader(closeConnection);
+            if (Connection == null || Connection.State != ConnectionState.Open)
+            {
+                throw new MySqlException("Connection must be valid and open.");
+            }
+
+            // TODO: stored procedure returning rows?
+
+            if (UsePreparedStatement || Parameters.Count > 0)
+            {
+                return new MySQLRealQueryDataReader(Connection, closeConnection, CommandText, Parameters, _fetchSize, CursorType);
+            }
+            else
+            {
+                var commandText = CommandText;
+                if (CommandType == CommandType.StoredProcedure)
+                {
+                    commandText = "CALL " + CommandText;
+                 
+                }
+
+                var nativeConnection = Connection.NativeConnection;
+                if (nativeConnection.mysql_query(commandText) != 0) // real query instead
+                {
+                    // error
+                    throw new MySqlException(nativeConnection);
+                }
+                else // query succeeded, process any data returned by it
+                {
+                    var result = nativeConnection.mysql_store_result();
+                    if (result != IntPtr.Zero)  // there are rows
+                    {
+                      
+
+                        // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
+                        // Don't close connection after close DataReader
+                        var dr = new MySQLQueryDataReader(result, Connection, closeConnection);
+                        return dr;
+                    }
+                    else  // mysql_store_result() returned nothing; should it have?
+                    {
+                        if (nativeConnection.mysql_errno() != 0)
+                        {
+                            throw new MySqlException(nativeConnection);
+                        }
+                        else if (nativeConnection.mysql_field_count() == 0)
+                        {
+                            // query does not return data
+                            // (it was not a SELECT)
+                            throw new MySqlException(nativeConnection,"No data returned");
+                        }
+                        else
+                        {
+                            // query without rows but fields
+#warning fix this
+                            return null;
+                        }
+                    }
+                }
+
+
+            }
         }
-        List<Statement> _pendingDisposeStatements= new List<Statement>();
+
 
         /// <summary>
         /// Overloaded. Executes the CommandText against the Connection and builds an IDataReader.
@@ -300,19 +391,6 @@ namespace MySQLDriverCS
             return null;
         }
 
-        /// <summary>
-        /// Executes the query and loads output parameter values.
-        /// </summary>
-        public int ExecuteCall()
-        {
-            using (var statement = CreateStatement())
-            {
-                statement.Parameters = Parameters;
-                statement.ExecuteCall();
-            }
-
-            return 0;
-        }
 
         /// <summary>
         /// Prepares an SQL string for execution.
@@ -342,12 +420,8 @@ namespace MySQLDriverCS
         {
             if (_disposed) return;
 
-            while (_pendingDisposeStatements.Any())
-            {
-                _pendingDisposeStatements[0].Dispose();
-                _pendingDisposeStatements.RemoveAt(0);
-            }
-      
+         
+
             _transaction = null;
             _connection = null;
             _disposed = true;

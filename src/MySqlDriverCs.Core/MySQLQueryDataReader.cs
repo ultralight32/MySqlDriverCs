@@ -13,16 +13,13 @@ namespace MySQLDriverCS
     /// </summary>
     public class MySQLQueryDataReader : DbDataReader
     {
-        private NativeResult nativeResult;
-
+        private NativeResult _nativeResult;
         internal DataTable dt;
-        // Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
-        // In order support CommandBehavior.CloseConnection 
         /// <summary>
-        /// 
+        /// Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx) In order support CommandBehavior.CloseConnection 
         /// </summary>
         protected bool m_CloseConnection = false;
-        internal MySQLConnection connection;
+        private readonly MySQLConnection _connection;
         internal System.Globalization.NumberFormatInfo MySQLNumberFormatInfo = new CultureInfo("en-US").NumberFormat;
 
 
@@ -47,25 +44,25 @@ namespace MySQLDriverCS
        
         // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
         // In order support CommandBehavior.CloseConnection
-        internal  MySQLQueryDataReader(IntPtr resultPtr, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
+        internal  MySQLQueryDataReader(IntPtr resultPtr, MySQLConnection connection, bool closeConnection)
         {
 
-            nativeResult = new NativeResult(resultPtr);
+            _nativeResult = new NativeResult(resultPtr);
             // Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
             // Save if close connection after close MySQLDataReader
-            m_CloseConnection = CloseConnection;
+            m_CloseConnection = closeConnection;
 
-            connection = _connection;
+            this._connection = connection;
             dt = new DataTable();
             uint i; ulong j;
-            uint num_fields = nativeResult.mysql_num_fields();
-            ulong num_rows = nativeResult.mysql_num_rows();
+            uint num_fields = _nativeResult.mysql_num_fields();
+            ulong num_rows = _nativeResult.mysql_num_rows();
             List<QueryFieldDescription> fields = new List<QueryFieldDescription>();
             for (i = 0; i < num_fields; i++)
             {
 
                 var field = new MYSQL_FIELD();
-                var ptr = nativeResult.mysql_fetch_field_direct(i);
+                var ptr = _nativeResult.mysql_fetch_field_direct(i);
                 Marshal.PtrToStructure(ptr, field);
 
 
@@ -86,21 +83,18 @@ namespace MySQLDriverCS
 
             for (j = 0; j < num_rows; j++)
             {
-                lock (_stmt)
-                {
-                    if (_stmt.TryToCancel) break;
-                }
+                
 
-                IntPtr myrow = nativeResult.mysql_fetch_row();
+                IntPtr myrow = _nativeResult.mysql_fetch_row();
                 if (myrow==IntPtr.Zero)
                 {
-                    throw new MySqlException(_connection.NativeConnection);
+                    throw new MySqlException(connection.NativeConnection);
                 }
                 DataRow dr = dt.NewRow();
 
                 /* for BLOB support
 				 * "Christophe Ravier" <c.ravier@laposte.net> 2003-11-27*/
-                var lengths = nativeResult.mysql_fetch_lengths((int)num_fields);
+                var lengths = _nativeResult.mysql_fetch_lengths((int)num_fields);
 
                 for (i = 0; i < num_fields; i++)
                 {
@@ -313,16 +307,16 @@ namespace MySQLDriverCS
         /// </summary>
         public override void Close()
         {
-            if (nativeResult != null)
+            if (_nativeResult != null)
             {
-                nativeResult.Dispose();
-                nativeResult = null;
+                _nativeResult.Dispose();
+                _nativeResult = null;
             }
 
             // Add by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
             // Close connection if connection is not null and CommandBehavior is CloseConnection
-            if (connection != null && m_CloseConnection)
-                connection.Close();
+            if (_connection != null && m_CloseConnection)
+                _connection.Close();
 
 
 

@@ -28,63 +28,77 @@
 
 using MySQLDriverCS.Interop;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace MySQLDriverCS
 {
-    public class MySQLRealQueryDataReader : IDataReader
+    internal class MySQLRealQueryDataReader : PreparedStatement,IDataReader
     {
         private readonly MySQLConnection _connection;
-        private int _fieldCount => _fields.Length;
-        private readonly NativeStatement _stmt;
+      
 
         private bool m_CloseConnection = false;
         private readonly MYSQL_FIELD[] _fields;
 
-        private MYSQL_BIND[] m_row;
+        private readonly MYSQL_BIND[] _rowColumns;
 
         private int MYSQL_NO_DATA = 100;
 
-        public MySQLRealQueryDataReader(MYSQL_FIELD[] fields, NativeStatement stmt, MySQLConnection connection, bool closeConnection)
+        public MySQLRealQueryDataReader(MySQLConnection connection, bool closeConnection, string query, MySQLParameterCollection parameterCollection, uint? fetchSize, CursorType cursorType) : base(connection,query,parameterCollection,fetchSize,cursorType)
         {
             _connection = connection;
-            _stmt = stmt;
-            _fields = fields;
+         
+            var fields = new List<MYSQL_FIELD>();
+            using (var resultMetadata = new NativeResultMetadata(_stmt))
+            {
+                for (var i = 0; i < resultMetadata.mysql_num_fields(); i++)
+                {
+                    IntPtr fieldPtr = resultMetadata.mysql_fetch_field_direct((uint)i);
+                    var field = Marshal.PtrToStructure<MYSQL_FIELD>(fieldPtr);
+                    fields.Add(field);
+                }
+            }
+
+            if (_stmt.mysql_stmt_execute() != 0)
+            {
+                throw new MySqlException(_stmt);
+            }
+            _fields = fields.ToArray();
             m_CloseConnection = closeConnection;
 
             IsClosed = false;
 
- 
-            m_row = new MYSQL_BIND[_fieldCount];
-            for (var index = 0; index < _fieldCount; index++)
+         
+
+
+            _rowColumns = new MYSQL_BIND[_fields.Length];
+            for (var index = 0; index < _fields.Length; index++)
             {
                 var fieldMetadata = _fields[index];
-                m_row[index] = new MYSQL_BIND();
+                _rowColumns[index] = new MYSQL_BIND();
 
-                if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB)
-                {
-                    fieldMetadata.MaxLength = 1024;
-                }
+             
                 //else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL
                 //{
                 //    // TODO: case needs deep review
                 //    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
                 //}
-                m_row[index].InitForBind(fieldMetadata, _stmt._nativeConnection);
+                _rowColumns[index].InitForBind(fieldMetadata, _stmt._nativeConnection);
             }
 
-            sbyte code = stmt.mysql_stmt_bind_result(m_row);
+            sbyte code = _stmt.mysql_stmt_bind_result(_rowColumns);
             if (code != 0)
-                throw new MySqlException(stmt);
+                throw new MySqlException(_stmt);
         }
 
         /// <inheritdoc />
         public int Depth => 1;
 
         /// <inheritdoc />
-        public int FieldCount => (int)_fieldCount;
+        public int FieldCount => (int)_fields.Length;
 
         /// <inheritdoc />
         public bool IsClosed { get; private set; }
@@ -113,7 +127,7 @@ namespace MySQLDriverCS
             get
             {
                 if (IsClosed) throw new MySqlException("Reader must be open");
-                return m_row[i].GetValue(i, _stmt, _fields[i]);
+                return _rowColumns[i].GetValue(i, _stmt, _fields[i]);
             }
         }
 
@@ -130,7 +144,7 @@ namespace MySQLDriverCS
                     throw new MySqlException(_stmt);
                 }
                 IsClosed = true;
-                for (int i = 0; i < _fieldCount; i++)
+                for (int i = 0; i < _fields.Length; i++)
                 {
                     RowDispose(i);
                 }
@@ -142,8 +156,9 @@ namespace MySQLDriverCS
         /// <summary>
         /// Closes this reader
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             Close();
         }
 
@@ -156,7 +171,7 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
         {
-            if (m_row[i].GetLength() > m_row[i].BufferLength)//data truncation
+            if (_rowColumns[i].GetLength() > _rowColumns[i].BufferLength)//data truncation
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
@@ -176,8 +191,8 @@ namespace MySQLDriverCS
             }
             else
             {
-                m_row[i].GetBytes(buffer, (uint)length);
-                return m_row[i].GetLength();
+                _rowColumns[i].GetBytes(buffer, (uint)length);
+                return _rowColumns[i].GetLength();
             }
         }
 
@@ -310,12 +325,12 @@ namespace MySQLDriverCS
 
         public void RowDispose(int i)
         {
-            m_row[i].Dispose();
+            _rowColumns[i].Dispose();
         }
 
         public bool RowIsNull(int i)
         {
-            return m_row[i].GetIsNull();
+            return _rowColumns[i].GetIsNull();
         }
     }
 }
