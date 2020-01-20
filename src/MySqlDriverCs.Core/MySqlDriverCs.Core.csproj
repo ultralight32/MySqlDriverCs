@@ -40,7 +40,7 @@
     <Compile Update="DataAdapter\MySQLDataAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="BindVariables\MySQLRealQueryDataReader.cs">
+    <Compile Update="BindVariables\BindVarQueryStatement.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="DataAdapter\MySQLDeleteCommand.cs">

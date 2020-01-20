@@ -3,12 +3,12 @@ using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS
 {
-    internal class DirectStatement
+    internal class LiteralNonQueryStatement
     {
         private readonly NativeConnection _nativeConnection;
         private readonly string _commandText;
 
-        public DirectStatement(NativeConnection nativeConnection, string commandText)
+        public LiteralNonQueryStatement(NativeConnection nativeConnection, string commandText)
         {
             _nativeConnection = nativeConnection;
             _commandText = commandText;

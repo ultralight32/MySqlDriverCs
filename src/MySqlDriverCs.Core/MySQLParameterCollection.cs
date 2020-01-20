@@ -68,7 +68,7 @@ namespace MySQLDriverCS
     /// </code></example>
     ///
 
-    public sealed class MySQLParameterCollection : IDataParameterCollection
+    public sealed class MySQLParameterCollection : IDataParameterCollection, IEnumerable<MySQLParameter>
     {
         private readonly List<MySQLParameter> _list = new List<MySQLParameter>();
 
@@ -158,6 +158,11 @@ namespace MySQLDriverCS
             _list.CopyTo((MySQLParameter[])array, index);
         }
 
+        IEnumerator<MySQLParameter> IEnumerable<MySQLParameter>.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
         /// <inheritdoc />
         public IEnumerator GetEnumerator()
         {
@@ -228,7 +233,7 @@ namespace MySQLDriverCS
 		/// <returns>The index in the collection of the new MySQLParameter object.</returns>
         private int AddAndReturnIndex(MySQLParameter value)
         {
-            if (value.ParameterName == null) throw new ArgumentException("parameter must be named");
+            
 
             _list.Add(value);
             return _list.Count - 1;

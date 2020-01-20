@@ -48,9 +48,7 @@
 #endregion LICENSE
 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace MySQLDriverCS
@@ -62,7 +60,6 @@ namespace MySQLDriverCS
     {
         private MySQLConnection _connection = null;
         private MySQLTransaction _transaction = null;
-
 
         /// <summary>Initializes a new instance of the MySQLCommand class.</summary>
         public MySQLCommand()
@@ -144,7 +141,6 @@ namespace MySQLDriverCS
         private void SetConnection(MySQLConnection value)
         {
             _connection = value;
-
         }
 
         /// <summary>
@@ -179,7 +175,6 @@ namespace MySQLDriverCS
 		/// </summary>
 		public void Cancel()
         {
-
         }
 
         /// <summary>
@@ -222,8 +217,8 @@ namespace MySQLDriverCS
         /// </remarks>
         public bool UsePreparedStatement { get; set; } = false;
 
-     
         private uint? _fetchSize = null;
+
         /// <summary>
         /// Number of rows to fetch from server at a time when using a cursor.
         /// </summary>
@@ -232,8 +227,8 @@ namespace MySQLDriverCS
             set => _fetchSize = value;
         }
 
-
         public CursorType CursorType { get; set; } = CursorType.NoCursor;
+
         /// <summary>
         /// Executes a SQL statement against the Connection object, and returns updated rows count.
         /// </summary>
@@ -245,40 +240,114 @@ namespace MySQLDriverCS
                 throw new MySqlException("Connection must be valid and open.");
             }
 
-            if (UsePreparedStatement || Parameters.Count > 0)
-            {
+            string commandText;
+            if (CommandType == CommandType.StoredProcedure)
+                commandText = "CALL " + CommandText;
+            else commandText = CommandText;
 
-                if (CommandType == CommandType.StoredProcedure)
+            if (!UsePreparedStatement && Parameters.Count == 0)
+            {
+                var exec = new LiteralNonQueryStatement(Connection.NativeConnection, commandText);
+                return exec.ExecuteNonQuery();
+            }
+
+            if (Parameters.Where(x => x.Direction == ParameterDirection.Output || x.Direction == ParameterDirection.InputOutput).ToArray().Any())
+            {
+                //if (commandText.StartsWith("CALL ", StringComparison.InvariantCultureIgnoreCase))
+                //    commandText = "SELECT " + CommandText.Substring("CALL ".Length);
+                //else
+                //    commandText = "SELECT " + CommandText;
+                using (var dr = new BindVarQueryStatement(Connection, false, commandText, Parameters, _fetchSize, CursorType))
                 {
-                    using (var exec = new PreparedExecute(Connection, "CALL " + CommandText, Parameters, _fetchSize, CursorType))
+                    if (!dr.Read())
+                        throw new Exception("No data");
+                    for (var index = 0; index < Parameters.Count; index++)
                     {
-                        return exec.ExecuteNonQuery();
+                        var par = Parameters[index];
+                        if (par.Direction != ParameterDirection.Input && par.Direction != ParameterDirection.InputOutput)
+                            continue;
+                        int ordinal;
+                        if (string.IsNullOrWhiteSpace(par.ParameterName))
+                        {
+                            ordinal = index;
+                        }
+                        else
+                        {
+                            ordinal = dr.GetOrdinal(par.ParameterName);
+                            if (ordinal < 0)
+                                throw new Exception("No data");
+                        }
+
+                        par.Value = dr.GetValue(ordinal);
                     }
-                }
-                else
-                {
-                    using (var exec = new PreparedExecute(Connection, CommandText, Parameters, _fetchSize, CursorType))
-                    {
-                        return exec.ExecuteNonQuery();
-                    }
+
+                    return 1;
                 }
             }
             else
-            {
-                if (CommandType == CommandType.StoredProcedure)
+                using (var exec = new BindVarNonQueryStatement(Connection, commandText, Parameters, _fetchSize, CursorType))
                 {
-                    var exec = new DirectStatement(Connection.NativeConnection, "CALL " + CommandText);
                     return exec.ExecuteNonQuery();
                 }
-                else
-                {
-                    var exec = new DirectStatement(Connection.NativeConnection, CommandText);
-                    return exec.ExecuteNonQuery();
-                }
-            }
-
-
         }
+        #region old code for bind vars
+        //internal override int ExecuteCall()
+        //{
+        //    repQuery = BindParameters();
+        //    if (connection.NativeConnection.mysql_query(repQuery) != 0)
+        //    {
+        //        // error
+        //        throw new MySqlException(connection.NativeConnection);
+        //    }
+        //    else // query succeeded, process any data returned by it
+        //    {
+        //        // Retrieve output parameters
+        //        return query_output_parameters();
+        //    }
+        //}
+        //int query_output_parameters()
+        //{
+        //    // Get output parameters - build select
+        //    ArrayList parameters = m_parameters.SortedList;
+        //    StringBuilder stmt = new StringBuilder();
+        //    int pCount = 0;
+        //    foreach (MySQLParameter param in parameters)
+        //    {
+        //        if (param.Direction == ParameterDirection.Output)
+        //        {
+        //            if (pCount > 0) stmt.Append(", ");
+        //            stmt.Append(param.ParameterName);
+        //            pCount++;
+        //        }
+        //    }
+        //    if (pCount > 0)
+        //    {
+        //        stmt.Insert(0, "select ");
+        //        // Query output parameter values
+        //        if (connection.NativeConnection.mysql_query(stmt.ToString()) != 0)
+        //        {
+        //            // error
+        //            throw new MySqlException(connection.NativeConnection);
+        //        }
+        //        var resultPtr = connection.NativeConnection.mysql_store_result();
+        //        if (resultPtr != IntPtr.Zero)  // there are rows
+        //        {
+        //            using (var dr = new MySQLQueryDataReader(resultPtr, this.connection, this, false))
+        //            {
+        //                if (dr.Read())
+        //                {
+        //                    // Load values
+        //                    foreach (MySQLParameter param in parameters)
+        //                        if (param.Direction == ParameterDirection.Output)
+        //                            param.Value = dr[param.ParameterName];
+        //                }
+        //                dr.Close();
+        //            }
+        //        }
+        //    }
+        //    return 0;
+        //}
+        #endregion
 
         /// <summary>
         /// Executes the CommandText against the Connection and builds an MySQLDataReader.
@@ -308,7 +377,7 @@ namespace MySQLDriverCS
 
             if (UsePreparedStatement || Parameters.Count > 0)
             {
-                return new MySQLRealQueryDataReader(Connection, closeConnection, CommandText, Parameters, _fetchSize, CursorType);
+                return new BindVarQueryStatement(Connection, closeConnection, CommandText, Parameters, _fetchSize, CursorType);
             }
             else
             {
@@ -316,7 +385,6 @@ namespace MySQLDriverCS
                 if (CommandType == CommandType.StoredProcedure)
                 {
                     commandText = "CALL " + CommandText;
-                 
                 }
 
                 var nativeConnection = Connection.NativeConnection;
@@ -330,11 +398,9 @@ namespace MySQLDriverCS
                     var result = nativeConnection.mysql_store_result();
                     if (result != IntPtr.Zero)  // there are rows
                     {
-                      
-
                         // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
                         // Don't close connection after close DataReader
-                        var dr = new MySQLQueryDataReader(result, Connection, closeConnection);
+                        var dr = new LiteralQueryStatement(result, Connection, closeConnection);
                         return dr;
                     }
                     else  // mysql_store_result() returned nothing; should it have?
@@ -347,7 +413,7 @@ namespace MySQLDriverCS
                         {
                             // query does not return data
                             // (it was not a SELECT)
-                            throw new MySqlException(nativeConnection,"No data returned");
+                            throw new MySqlException(nativeConnection, "No data returned");
                         }
                         else
                         {
@@ -357,11 +423,8 @@ namespace MySQLDriverCS
                         }
                     }
                 }
-
-
             }
         }
-
 
         /// <summary>
         /// Overloaded. Executes the CommandText against the Connection and builds an IDataReader.
@@ -391,7 +454,6 @@ namespace MySQLDriverCS
             return null;
         }
 
-
         /// <summary>
         /// Prepares an SQL string for execution.
         /// </summary>
@@ -419,8 +481,6 @@ namespace MySQLDriverCS
         public void Dispose()
         {
             if (_disposed) return;
-
-         
 
             _transaction = null;
             _connection = null;

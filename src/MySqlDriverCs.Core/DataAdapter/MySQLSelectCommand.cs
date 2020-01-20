@@ -327,11 +327,11 @@ namespace MySQLDriverCS
             command.Prepare();
 
             DataTable table;
-            MySQLRealQueryDataReader reader = null;
+            BindVarQueryStatement reader = null;
             // Execute query ->
             try
             {
-                reader = (MySQLRealQueryDataReader)command.ExecuteReader(/*CommandBehavior.SequentialAccess*/);
+                reader = (BindVarQueryStatement)command.ExecuteReader(/*CommandBehavior.SequentialAccess*/);
 
                 // Get results ->
                 table = new DataTable(null);
