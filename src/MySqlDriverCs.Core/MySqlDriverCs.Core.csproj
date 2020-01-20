@@ -32,9 +32,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>NativeImportsGenerator.tt</DependentUpon>
     </Compile>
-    <Compile Update="MySQLCommand.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="MySQLCommand.cs" />
     <Compile Update="MySQLConnection.cs" />
     <Compile Update="MySQLConnectionString.cs">
       <SubType>Code</SubType>
@@ -42,7 +40,7 @@
     <Compile Update="MySQLDataAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="MySQLDataReader.cs">
+    <Compile Update="MySQLRealQueryDataReader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLDeleteCommand.cs">

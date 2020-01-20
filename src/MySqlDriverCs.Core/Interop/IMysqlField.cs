@@ -12,14 +12,16 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Type of field
         /// </summary>
-        uint Type { get; set; }
+        enum_field_types Type { get; set; }
         /// <summary>
         /// Max width for selected set
         /// </summary>
-        long Max_Length { get; set; }
+        long MaxLength { get; set; }
         /// <summary>
         /// Width of column (create length)
         /// </summary>
         uint Length { get; }
+ 
+        MySqlFieldFlags Flags { get; }
     }
 }

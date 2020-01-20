@@ -12,11 +12,11 @@ namespace MySQLDriverCS
     /// <summary>
     /// Summary description for Statement.
     /// </summary>
-    internal class DirectStatement : Statement
+    internal class SqlInjectedParametersStatement : Statement
     {
         protected string repQuery;
 
-        public DirectStatement(MySQLConnection connection, string query)
+        public SqlInjectedParametersStatement(MySQLConnection connection, string query)
         {
             this.connection = connection;
             this.query = query;
@@ -41,6 +41,11 @@ namespace MySQLDriverCS
                 string paramName = param.ParameterName;
                 object Value = param.Value;
 
+                if (resQuery[0] != '@' && resQuery.IndexOf("@" +paramName) >= 0)
+                {
+                    paramName = "@" + paramName;
+                }
+
                 if (param.Direction == ParameterDirection.Output && resQuery.StartsWith("CALL"))
                 {
                     // Hack - en calls no modifico el parametro de output, sino MySql da error
@@ -50,26 +55,30 @@ namespace MySQLDriverCS
                 if (Value == null || Value == DBNull.Value)
                     resQuery = resQuery.Replace(paramName, "NULL");
                 else
-                if ((Value.GetType() == typeof(int)) ||
-                    (Value.GetType() == typeof(long)) ||
-                    (Value.GetType() == typeof(short)) ||
-                    (Value.GetType() == typeof(decimal)) ||
-                    (Value.GetType() == typeof(float)) ||
-                    (Value.GetType() == typeof(double)))
+                if (Value is int ||
+                    Value is long ||
+                    Value is short ||
+                    Value is decimal ||
+                    Value is float ||
+                    Value is double)
                     resQuery = resQuery.Replace(paramName, Convert.ToString(Value, CultureInfo.InvariantCulture.NumberFormat));
                 else
-                if (Value.GetType() == typeof(DateTime))
+                if (Value is DateTime)
                 {
                     DateTime dt = (DateTime)Value;
                     string dateStr;
-                    if (param.DbType == DbType.Date)
+                    if (param.DbType == MySqlDbType.Date)
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") + "\" "; ;
                     }
-                    else if (param.DbType == DbType.DateTime2)
+                    else if (param.DbType == MySqlDbType.DateTime)
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") +
-                                  " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + ((dt.Millisecond > 0) ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";
+                                  " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + (dt.Millisecond > 0 ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";
+                    }
+                    else if (param.DbType == MySqlDbType.Year)
+                    {
+                        dateStr = "'"+dt.Year.ToString(CultureInfo.InvariantCulture)+"'";
                     }
                     else
                     {
@@ -170,7 +179,7 @@ namespace MySQLDriverCS
                 var resultPtr = connection.NativeConnection.mysql_store_result();
                 if (resultPtr != IntPtr.Zero)  // there are rows
                 {
-                    using (var dr = new MySQLDataReader(resultPtr, this.connection, this, false))
+                    using (var dr = new MySQLQueryDataReader(resultPtr, this.connection, this, false))
                     {
                         if (dr.Read())
                         {
@@ -187,7 +196,7 @@ namespace MySQLDriverCS
             return 0;
         }
 
-        internal override DbDataReader ExecuteReader(bool closeConnection)
+        internal override IDataReader ExecuteReader(bool closeConnection)
         {
             bTryToCancel = false;
             repQuery = BindParameters();
@@ -209,7 +218,7 @@ namespace MySQLDriverCS
 
                     // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
                     // Don't close connection after close DataReader
-                    MySQLDataReader dr = new MySQLDataReader(result, this.connection, this, closeConnection);
+                    var dr = new MySQLQueryDataReader(result, this.connection, this, closeConnection);
                     return dr;
                 }
                 else  // mysql_store_result() returned nothing; should it have?

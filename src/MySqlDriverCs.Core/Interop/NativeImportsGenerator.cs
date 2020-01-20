@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using MySQLDriverCS.Interop;
 
 namespace MySqlDriverCs.Interop
 {
@@ -14,6 +15,25 @@ namespace MySqlDriverCs.Interop
         {
             _nativeTracer = nativeTracer;
         }
+
+        /// <summary>
+        /// mysql - a mysql handle, which was previously allocated by mysql_init() or mysql_real_connect().
+        /// charset - a pointer to a MY_CHARSET_INFO structure, in which the information will be copied.
+        /// </summary>
+        [DllImport("libmySQL.dll", EntryPoint = "mysql_get_character_set_info")]
+        private static extern void mysql_get_character_set_info(IntPtr mysql, IntPtr charsetinfo);
+
+        MY_CHARSET_INFO INativeProxy.mysql_get_character_set_info(IntPtr mysql)
+        {
+            _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
+
+            var ptr = Marshal.AllocHGlobal(Marshal.SizeOf<MY_CHARSET_INFO>());
+            mysql_get_character_set_info(mysql, ptr);
+            var charsetinfo = (MY_CHARSET_INFO) Marshal.PtrToStructure(ptr, typeof(MY_CHARSET_INFO));
+            Marshal.FreeHGlobal(ptr);
+            return charsetinfo;
+        }
+
 
         [DllImport(DllName, EntryPoint = "mysql_close")]
         private static extern void mysql_close(IntPtr handle);
@@ -74,7 +94,7 @@ namespace MySqlDriverCs.Interop
         IntPtr INativeProxy.mysql_real_connect(IntPtr mysql, string host, string user, string passwd, string db, uint port, string unix_socket, int client_flag)
         {
             _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
-            return mysql_real_connect( mysql,  host,  user,  passwd,  db,  port,  unix_socket,  client_flag);
+            return mysql_real_connect(mysql, host, user, passwd, db, port, unix_socket, client_flag);
         }
 
         [DllImport(DllName, EntryPoint = "mysql_select_db")]
@@ -169,6 +189,26 @@ namespace MySqlDriverCs.Interop
             _nativeTracer = nativeTracer;
         }
 
+        /// <summary>
+        /// mysql - a mysql handle, which was previously allocated by mysql_init() or mysql_real_connect().
+        /// charset - a pointer to a MY_CHARSET_INFO structure, in which the information will be copied.
+        /// </summary>
+        [DllImport("libmySQL.dll", EntryPoint = "mysql_get_character_set_info")]
+        private static extern void mysql_get_character_set_info(IntPtr mysql, IntPtr charsetinfo);
+
+        MY_CHARSET_INFO INativeProxy.mysql_get_character_set_info(IntPtr mysql)
+        {
+            _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
+
+            var ptr = Marshal.AllocHGlobal(Marshal.SizeOf<MY_CHARSET_INFO>());
+            mysql_get_character_set_info(mysql, ptr);
+            var charsetinfo = new MY_CHARSET_INFO();
+            Marshal.PtrToStructure(ptr, charsetinfo);
+            Marshal.FreeHGlobal(ptr);
+            return charsetinfo;
+        }
+
+
         [DllImport(DllName, EntryPoint = "mysql_close")]
         private static extern void mysql_close(IntPtr handle);
 
@@ -228,7 +268,7 @@ namespace MySqlDriverCs.Interop
         IntPtr INativeProxy.mysql_real_connect(IntPtr mysql, string host, string user, string passwd, string db, uint port, string unix_socket, int client_flag)
         {
             _nativeTracer?.Trace(MethodBase.GetCurrentMethod().Name);
-            return mysql_real_connect( mysql,  host,  user,  passwd,  db,  port,  unix_socket,  client_flag);
+            return mysql_real_connect(mysql, host, user, passwd, db, port, unix_socket, client_flag);
         }
 
         [DllImport(DllName, EntryPoint = "mysql_select_db")]

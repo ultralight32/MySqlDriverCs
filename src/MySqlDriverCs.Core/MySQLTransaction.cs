@@ -1,4 +1,5 @@
 #region LICENSE
+
 /*
 	MySQLDriverCS: An C# driver for MySQL.
 	Copyright (c) 2002 Manuel Lucas Viñas Livschitz.
@@ -19,116 +20,110 @@
     along with MySQLDriverCS; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#endregion
-using System;
+
+#endregion LICENSE
+
 using System.Data;
-using System.Data.Common;
 
 namespace MySQLDriverCS
 {
-	/// <summary>
-	/// Transaction control in MySQL
-	/// </summary>
-	public class MySQLTransaction : DbTransaction
-	{
-        private MySQLConnection Conn = null;
-		private IsolationLevel IL = IsolationLevel.Unspecified;
-        private bool bDisposed = false;
+    /// <summary>
+    /// Transaction control in MySQL
+    /// </summary>
+    public class MySQLTransaction : IDbTransaction
+    {
+        private bool _disposed = false;
 
-		internal MySQLTransaction(MySQLConnection conn, IsolationLevel il)
-		{
-			Conn=conn;
-			MySQLCommand cmd = null;
-			switch(il)
-			{
-				case IsolationLevel.ReadCommitted:
-                    cmd = new MySQLCommand("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",conn);
-					break;
-				case IsolationLevel.ReadUncommitted:
-                    cmd = new MySQLCommand("SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED", conn);
-					break;
-				case IsolationLevel.RepeatableRead:
-                    cmd = new MySQLCommand("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ", conn);
-					break;
-				case IsolationLevel.Serializable:
-                    cmd = new MySQLCommand("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE", conn);
-					break;
-				case IsolationLevel.Chaos:
-					throw new MySqlException("MySQLDriverCS Error: Chaos isolation level is not implemented in MySQL.");
-					
-			}
-
-			if(cmd != null)
-			{
-				IL=il;
-				cmd.ExecuteNonQuery();
-			}
-			cmd = new MySQLCommand("BEGIN",conn);
-			cmd.ExecuteNonQuery();
-		}
-		/// <summary>
-		/// Performs a commit
-		/// </summary>
-		public override void Commit()
-		{
-			if(Conn!=null)
-			{
-				MySQLCommand cmd = new MySQLCommand("COMMIT",Conn);
-				cmd.ExecuteNonQuery();
-			}
-		}
-		/// <summary>
-		/// Performs a rollback
-		/// </summary>
-		public override void Rollback()
-		{
-			if(Conn!=null)
-			{
-				MySQLCommand cmd = new MySQLCommand("ROLLBACK",Conn);
-				cmd.ExecuteNonQuery();
-			}
-		}
-		/// <summary>
-		/// Connection property
-		/// </summary>
-		protected override DbConnection DbConnection
-		{
-			get
-			{ 
-				return Conn;
-			}
-		}
-		/// <summary>
-		/// Isolation level property
-		/// </summary>
-		public override IsolationLevel IsolationLevel 
-		{
-			get
-			{
-				return IL;
-			}
-		}
-		
-		/// <summary>
-		/// Dispose destructor
-		/// </summary>
-		protected override void Dispose(bool disposing)
+        internal MySQLTransaction(MySQLConnection connection, IsolationLevel isolationLevel)
         {
-            if (bDisposed) return;
+            Connection = connection;
+            var sql = "";
+
+            switch (isolationLevel)
+            {
+                case IsolationLevel.ReadCommitted:
+                    sql = "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED";
+
+                    break;
+
+                case IsolationLevel.ReadUncommitted:
+                    sql = "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+
+                    break;
+
+                case IsolationLevel.RepeatableRead:
+                    sql = "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+
+                    break;
+
+                case IsolationLevel.Serializable:
+                    sql = "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+
+                    break;
+
+                case IsolationLevel.Chaos:
+                    throw new MySqlException("MySQLDriverCS Error: Chaos isolation level is not implemented in MySQL.");
+            }
+
+            IsolationLevel = isolationLevel;
+            using (var cmd = new MySQLCommand(sql, connection))
+            {
+                cmd.ExecuteNonQuery();
+            }
+            using (var cmd = new MySQLCommand("BEGIN", connection))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <inheritdoc />
+        IDbConnection IDbTransaction.Connection => Connection;
+
+        public MySQLConnection Connection { get; private set; }
+
+        /// <inheritdoc />
+        public IsolationLevel IsolationLevel { get; private set; } = IsolationLevel.Unspecified;
+
+        /// <inheritdoc />
+        public void Commit()
+        {
+            if (Connection == null)
+                throw new MySqlException("Connection was closed");
+            using (var cmd = new MySQLCommand("COMMIT", Connection))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            if (_disposed) return;
 
             try
             {
-				if (Conn.State != ConnectionState.Closed)
-				{
-					Rollback();
-				}
+                if (Connection.State != ConnectionState.Closed)
+                {
+                    Rollback();
+                }
             }
             finally
             {
-                Conn = null;
-                IL = IsolationLevel.Unspecified;
-                bDisposed = true;
+                Connection = null;
+                IsolationLevel = IsolationLevel.Unspecified;
+                _disposed = true;
             }
-		}
-	}
+        }
+
+        /// <inheritdoc />
+        public void Rollback()
+        {
+            if (Connection == null)
+                throw new MySqlException("Connection was closed");
+            using (var cmd = new MySQLCommand("ROLLBACK", Connection))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
 }
