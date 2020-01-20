@@ -27,37 +27,14 @@
 
 using MySQLDriverCS.Interop;
 using System;
-using System.Collections;
 using System.Data;
+using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MySQLDriverCS
 {
-    public enum MySqlDbType
-    {
-        BigInt = 0,
-        Binary = 1,
-        Bit = 2,
-        String = 3,
-        Date = 4,
-        DateTime = 5,
-        Decimal = 6,
-        Double = 7,
-        Int = 8,
-        Json = 9,
-        Short = 10,
-        Byte = 11,
-        Boolean = 12,
-        Time = 13,
-        Year = 14,
-        Point = 15,
-        Line = 16,
-        Polygon = 17,
-        Geometry = 18,
-        Float = 19,
-        Int24 = 20
-    }
-
     /// <summary>
     /// Represents a parameter to a MySQLCommand. This class cannot be inherited.
     /// </summary>
@@ -96,79 +73,8 @@ namespace MySQLDriverCS
     {
         private MySqlDbType? _dbType = null;
 
-        private object m_value = null;
-        private bool _sourceColumnNullMapping;
-
-        internal enum_field_types GetFieldType()
-        {
-            switch (DbType)
-            {
-                case MySqlDbType.BigInt:
-                    return enum_field_types.MYSQL_TYPE_LONGLONG;
-
-                case MySqlDbType.Binary:
-                    return enum_field_types.MYSQL_TYPE_BLOB;
-
-                case MySqlDbType.Bit:
-                    return enum_field_types.MYSQL_TYPE_BIT;
-
-                case MySqlDbType.String:
-                    return enum_field_types.MYSQL_TYPE_STRING;
-
-                case MySqlDbType.Date:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case MySqlDbType.DateTime:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case MySqlDbType.Decimal:
-                    return enum_field_types.MYSQL_TYPE_DECIMAL;
-
-                case MySqlDbType.Double:
-                    return enum_field_types.MYSQL_TYPE_DOUBLE;
-
-                case MySqlDbType.Int:
-                    return enum_field_types.MYSQL_TYPE_LONG;
-
-                case MySqlDbType.Json:
-                    return enum_field_types.MYSQL_TYPE_STRING;
-
-                case MySqlDbType.Short:
-                    return enum_field_types.MYSQL_TYPE_SHORT;
-
-                case MySqlDbType.Byte:
-                    return enum_field_types.MYSQL_TYPE_TINY;
-
-                case MySqlDbType.Boolean:
-                    return enum_field_types.MYSQL_TYPE_TINY;
-
-                case MySqlDbType.Time:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case MySqlDbType.Year:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case MySqlDbType.Point:
-                    return enum_field_types.MYSQL_TYPE_GEOMETRY;
-
-                case MySqlDbType.Line:
-                    return enum_field_types.MYSQL_TYPE_GEOMETRY;
-
-                case MySqlDbType.Polygon:
-                    return enum_field_types.MYSQL_TYPE_GEOMETRY;
-
-                case MySqlDbType.Geometry:
-                    return enum_field_types.MYSQL_TYPE_GEOMETRY;
-
-                case MySqlDbType.Float:
-                    return enum_field_types.MYSQL_TYPE_FLOAT;
-                case MySqlDbType.Int24:
-                    return enum_field_types.MYSQL_TYPE_INT24;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        private object _value = null;
+        private int? _size;
 
         /// <summary>
         /// Initializes a new instance of the MySQLParameter class.
@@ -185,7 +91,7 @@ namespace MySQLDriverCS
             ParameterName = sParamName;
             SourceColumn = sSourceColumn;
             SourceVersion = sourceVersion;
-            m_value = value;
+            _value = value;
             Precision = precision;
             Scale = scale;
             Size = size;
@@ -200,7 +106,7 @@ namespace MySQLDriverCS
         {
             ParameterName = parameterName;
             _dbType = type;
-            m_value = DBNull.Value;
+
         }
 
         /// <summary>
@@ -212,7 +118,7 @@ namespace MySQLDriverCS
         public MySQLParameter(string parameterName, object value)
         {
             ParameterName = parameterName;
-            _dbType = GuessMySqlDbTypes(m_value).First();
+            _dbType = GuessMySqlDbTypes(_value).First();
             this.Value = value;
         }
 
@@ -225,7 +131,7 @@ namespace MySQLDriverCS
                     return new[] { MySqlDbType.Binary };
                 case int _:
                 case uint _:
-                    return new[] { MySqlDbType.Int, MySqlDbType.Int24, MySqlDbType.BigInt, MySqlDbType.Bit };
+                    return new[] { MySqlDbType.Int, MySqlDbType.Int24, MySqlDbType.BigInt, MySqlDbType.Year, MySqlDbType.Bit };
                 case long _:
                 case ulong _:
                     return new[] { MySqlDbType.BigInt, MySqlDbType.Bit };
@@ -245,10 +151,13 @@ namespace MySQLDriverCS
                     return new[] { MySqlDbType.Double, MySqlDbType.Float };
                 case float _:
                     return new[] { MySqlDbType.Float, MySqlDbType.Double };
-                case DateTime _:
-                    return new[] { MySqlDbType.DateTime, MySqlDbType.Time, MySqlDbType.Date, MySqlDbType.Year };
+                case DateTime datetime:
+                    if (datetime.Kind == DateTimeKind.Utc)
+                        return new[] { MySqlDbType.TimeStamp, MySqlDbType.DateTime, MySqlDbType.Time, MySqlDbType.Date, MySqlDbType.Year };
+                    else
+                        return new[] { MySqlDbType.DateTime, MySqlDbType.TimeStamp, MySqlDbType.Time, MySqlDbType.Date, MySqlDbType.Year };
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(value),value?.ToString());
+                    throw new ArgumentOutOfRangeException(nameof(value), value?.ToString());
             }
         }
 
@@ -267,18 +176,7 @@ namespace MySQLDriverCS
             Value = value;
         }
 
-        /// <summary>
-        /// Use MySQLParameter(string parameterName, DbType type)
-        /// </summary>
-        /// <param name="parameterName">The name of the parameter to map.</param>
-        /// <param name="dbType">One of the DbType values</param>
-        /// <param name="sourceColumn">This value is ignored. Suported by future Operation</param>
-        public MySQLParameter(string parameterName, MySqlDbType dbType, string sourceColumn)
-        {
-            ParameterName = parameterName;
-            _dbType = dbType;
-            SourceColumn = sourceColumn;
-        }
+
 
         /// <summary>
         /// Gets or sets the DbType of the parameter.
@@ -375,7 +273,7 @@ namespace MySQLDriverCS
                     var types = GuessMySqlDbTypes(Value);
                     if (types.All(x => x != value))
                         throw new ArgumentException("Incompatible types");
-       
+
                 }
 
                 _dbType = value;
@@ -424,7 +322,7 @@ namespace MySQLDriverCS
         {
             get
             {
-                return m_value;
+                return _value;
             }
             set
             {
@@ -433,12 +331,12 @@ namespace MySQLDriverCS
                     if (value != null && value != DBNull.Value)
                     {
                         var type = GuessMySqlDbTypes(value).First();
-                        m_value = value;
+                        _value = value;
                         DbType = type;
                     }
                     else
                     {
-                        m_value = DBNull.Value;
+                        _value = DBNull.Value;
                     }
                 }
                 else
@@ -448,93 +346,214 @@ namespace MySQLDriverCS
                         var types = GuessMySqlDbTypes(value);
                         if (types.All(x => x != _dbType))
                             throw new ArgumentException("Incompatible types");
-                        m_value = value;
+                        _value = value;
                     }
                     else
                     {
-                        m_value = DBNull.Value;
+                        _value = DBNull.Value;
                     }
                 }
             }
         }
 
-        #region IDbDataParameter Members
-
-        /// <summary>
-        /// Gets or sets the maximum number of digits used to represent the Value property.
-        /// </summary>
-
+        /// <inheritdoc />
         public byte Precision { get; set; }
 
-        /// <summary>
-        /// Gets or sets the number of decimal places to which Value is resolved.
-        /// </summary>
+        /// <inheritdoc />
         public byte Scale { get; set; }
 
-        /// <summary>
-        /// Gets or sets the maximum size, in bytes, of the data within the column.
-        /// </summary>
-        public int Size { get; set; }
+        /// <inheritdoc />
+        public int Size
+        {
+            get
+            {
+                if (_size == null) throw new ArgumentException("Size was not set");
 
-        #endregion IDbDataParameter Members
+                return _size.Value;
+            }
+            set => _size = value;
+        }
 
-        #region ICloneable Members
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public object Clone()
         {
             return new MySQLParameter(_dbType, Direction, IsNullable, ParameterName,
-                SourceColumn, SourceVersion, m_value, Precision, Scale, Size);
+                SourceColumn, SourceVersion, _value, Precision, Scale, Size);
         }
 
-        #endregion ICloneable Members
 
-        /// <summary>
-        ///
-        /// </summary>
-        public bool SourceColumnNullMapping
+        internal BindInput GetBindInput()
         {
-            get { return this._sourceColumnNullMapping; }
-            set { this._sourceColumnNullMapping = value; }
+            var value = _value;
+            if (value == DBNull.Value)
+                value = null;
+            switch (DbType)
+            {
+
+                case MySqlDbType.BigInt:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONGLONG, null, null, true, false);
+                    else if (value is ulong || value is uint || value is ushort || value is byte)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONGLONG, BitConverter.GetBytes(Convert.ToUInt64(value)), null, null, true);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONGLONG, BitConverter.GetBytes(Convert.ToInt64(value)), null, null, false);
+                case MySqlDbType.Int24:
+                case MySqlDbType.Int:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, null, null, true, false);
+                    else if (value is ulong || value is uint || value is ushort || value is byte)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, BitConverter.GetBytes(Convert.ToUInt32(value)), null, null, true);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, BitConverter.GetBytes(Convert.ToInt32(value)), null, null, false);
+                case MySqlDbType.Short:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_SHORT, null, null, true, false);
+                    else if (value is ulong || value is uint || value is ushort || value is byte)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_SHORT, BitConverter.GetBytes(Convert.ToUInt16(value)), null, null, true);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_SHORT, BitConverter.GetBytes(Convert.ToInt16(value)), null, null, false);
+                case MySqlDbType.Byte:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, null, null, true, false);
+                    else if (value is ulong || value is uint || value is ushort || value is byte)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, BitConverter.GetBytes(Convert.ToByte(value)), null, null, true);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, BitConverter.GetBytes(Convert.ToSByte(value)), null, null, false);
+                case MySqlDbType.Binary:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_BLOB, null, null, true, false);
+                        else if (value is byte[] bytea)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_BLOB, bytea, bytea.Length, null, false);
+                        else
+                            throw new ArgumentException("Invalid value type");
+                    }
+                case MySqlDbType.Year:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_YEAR, null, null, true, false);
+                    else if (value is DateTime dateTime)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, BitConverter.GetBytes(dateTime.Year), null, null, false);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, BitConverter.GetBytes(Convert.ToInt32(value)), null, null, false);
+                case MySqlDbType.Boolean:
+                    if (value == null)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, null, null, true, false);
+                    else if (value is bool boolean)
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, BitConverter.GetBytes(Convert.ToByte(boolean ? 1 : 0)), null, null, false);
+                    else
+                        return new BindInput(enum_field_types.MYSQL_TYPE_TINY, BitConverter.GetBytes(Convert.ToByte(Convert.ToInt64(value) != 0 ? 1 : 0)), null, null, false);
+                case MySqlDbType.Decimal:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DECIMAL, null, null, true, false);
+                        var dec = Convert.ToDecimal(value);
+                        var str = dec.ToString(CultureInfo.InvariantCulture);
+                        var bytes = Encoding.ASCII.GetBytes(str);
+                        return new BindInput(enum_field_types.MYSQL_TYPE_DECIMAL, bytes, bytes.Length, null, false);
+                    }
+                case MySqlDbType.String:
+                case MySqlDbType.Json:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_STRING, null, null, true, false);
+                        var bytes = Encoding.ASCII.GetBytes(value.ToString());
+                        return new BindInput(enum_field_types.MYSQL_TYPE_STRING, bytes, bytes.Length, null, false);
+                    }
+                case MySqlDbType.Date:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DATE, null, null, true, false);
+                        if (value is DateTime datetime)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DATE, ToMysqlTimeBytes(datetime, enum_mysql_timestamp_type.MYSQL_TIMESTAMP_DATE), null, false, false);
+                        throw new ArgumentException("Invalid value type");
+                    }
+
+                case MySqlDbType.DateTime:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DATETIME, null, null, true, false);
+                        if (value is DateTime datetime)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DATETIME, ToMysqlTimeBytes(datetime, enum_mysql_timestamp_type.MYSQL_TIMESTAMP_DATETIME), null, false, false);
+                        throw new ArgumentException("Invalid value type");
+                    }
+
+                case MySqlDbType.Time:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_TIME, null, null, true, false);
+                        if (value is DateTime datetime)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_TIME, ToMysqlTimeBytes(datetime, enum_mysql_timestamp_type.MYSQL_TIMESTAMP_TIME), null, false, false);
+                        throw new ArgumentException("Invalid value type");
+                    }
+                case MySqlDbType.TimeStamp:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_TIMESTAMP, null, null, true, false);
+                        if (value is DateTime datetime)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_TIMESTAMP, ToMysqlTimeBytes(datetime, enum_mysql_timestamp_type.MYSQL_TIMESTAMP_DATETIME), null, false, false);
+                        throw new ArgumentException("Invalid value type");
+                    }
+                case MySqlDbType.Double:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_DOUBLE, null, null, true, false);
+                        var bytes = BitConverter.GetBytes(Convert.ToDouble(value));
+                        return new BindInput(enum_field_types.MYSQL_TYPE_DOUBLE, bytes, null, null, false);
+                    }
+                case MySqlDbType.Float:
+                    {
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_FLOAT, null, null, true, false);
+                        var bytes = BitConverter.GetBytes(Convert.ToSingle(value));
+                        return new BindInput(enum_field_types.MYSQL_TYPE_FLOAT, bytes, null, null, false);
+                    }
+                case MySqlDbType.Bit:
+                    {
+                        // workaround for  Using unsupported buffer type: 16 
+                        if (value == null)
+                            return new BindInput(enum_field_types.MYSQL_TYPE_NULL, null, null, true, false);
+                        var bytes=BitConverter.GetBytes(Convert.ToUInt64(value));
+                        return new BindInput(enum_field_types.MYSQL_TYPE_LONG, bytes, null, false, false);
+                    }
+                case MySqlDbType.Point:
+                    throw new ArgumentOutOfRangeException();
+                case MySqlDbType.Line:
+                    throw new ArgumentOutOfRangeException();
+                case MySqlDbType.Polygon:
+                    throw new ArgumentOutOfRangeException();
+                case MySqlDbType.Geometry:
+                    throw new ArgumentOutOfRangeException();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return null;
         }
-    }
 
-    /// <summary>
-    /// Provides a mechanism to customize the sort ordering of a MySqlParameter's
-    /// collection
-    /// </summary>
-    public class MySQLParameterComparer : IComparer
-    {
-        #region IComparer Members
-
-        /// <summary>
-        /// Returns the sort order of two MySqlParameter instances.
-        /// </summary>
-        /// <param name="x">The first MySqlParameter to compare.</param>
-        /// <param name="y">The second MySqlParameter to compare. </param>
-        /// <returns>A Int32 containing a value that reflects the sort order
-        /// of a as compared to b. The following lines defines the
-        /// conditions under which the returned value is a negative number,
-        /// zero, or a positive number.
-        /// Any negative number if a.ParameterName.Length &lt; b.ParameterName.Length.
-        /// Zero if a.ParameterName.Length == b.ParameterName.Length.
-        /// Any positive number a.ParameterName.Length &gt; b.ParameterName.Length.
-        /// </returns>
-        public int Compare(object x, object y)
+        private byte[] ToMysqlTimeBytes(DateTime datetime, enum_mysql_timestamp_type timeType)
         {
-            MySQLParameter p1 = (MySQLParameter)x;
-            MySQLParameter p2 = (MySQLParameter)y;
-            if (p1.ParameterName.Length < p2.ParameterName.Length)
-                return 1;
-            else if (p1.ParameterName.Length == p2.ParameterName.Length)
-                return 0;
-            else
-                return -1;
+            return StructToBytes(new MYSQL_TIME
+            {
+                year = (uint) datetime.Year,
+                month = (uint) datetime.Month,
+                day = (uint) datetime.Day,
+                hour = (uint) datetime.Hour,
+                minute = (uint) datetime.Minute,
+                second = (uint) datetime.Second,
+                second_part = (uint) (datetime.Millisecond * 1000),
+                time_type = timeType
+            });
         }
 
-        #endregion IComparer Members
+        private static byte[] StructToBytes(object str)
+        {
+            int size = Marshal.SizeOf(str);
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(str, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+            return arr;
+        }
     }
 }

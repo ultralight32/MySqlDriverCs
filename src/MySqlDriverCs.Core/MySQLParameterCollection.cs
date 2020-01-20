@@ -155,28 +155,36 @@ namespace MySQLDriverCS
 		/// </summary>
 		/// <param name="value">The MySQLParameter to add to the collection.</param>
 		/// <returns>The index in the collection of the new MySQLParameter object.</returns>
-		public int Add(MySQLParameter value)
+        private int AddAndReturnIndex(MySQLParameter value)
         {
-            if (value.ParameterName != null)
-            {
-                //sorted = false;
-                m_List.Add(value);
-                return m_List.Count - 1;
-            }
+            if (value.ParameterName == null) throw new ArgumentException("parameter must be named");
+ 
+            m_List.Add(value);
+            return m_List.Count - 1;
 
-            throw new ArgumentException("parameter must be named");
+        }
+
+
+        /// <summary>
+        /// Adds the specified MySQLParameter object to the MySQLParameterCollection.
+        /// </summary>
+        /// <param name="value">The MySQLParameter to add to the collection.</param>
+        /// <returns>The MySQLParameter object.</returns>
+        public MySQLParameter Add(MySQLParameter value)
+        {
+            return m_List[AddAndReturnIndex(value)];
         }
 
         /// <inheritdoc />
         public int Add(object value)
         {
-            return Add((MySQLParameter)value);
+            return AddAndReturnIndex((MySQLParameter)value);
         }
 
         /// <inheritdoc />he new MySQLParameter object.</returns>
         public int Add(string parameterName, DbType type)
         {
-            return Add(new MySQLParameter(parameterName, type));
+            return AddAndReturnIndex(new MySQLParameter(parameterName, type));
         }
 
         /// <inheritdoc />

@@ -58,7 +58,7 @@ namespace MySQLDriverCS
             _fieldCount = fieldCount;
 
             IntPtr fields;
-            if (_connection.NativeConnection.ClientVersion.CompareTo("6.0.0") > 0)
+            if (_stmt._nativeConnection.ClientVersion.CompareTo("6.0.0") > 0)
             {
                 MYSQL_STMT_6_1 mysql_stmt = (MYSQL_STMT_6_1)Marshal.PtrToStructure(stmt.stmt, typeof(MYSQL_STMT_6_1));
 
@@ -94,7 +94,7 @@ namespace MySQLDriverCS
                 //    // TODO: case needs deep review
                 //    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
                 //}
-                m_row[index].InitForBind(fieldMetadata);
+                m_row[index].InitForBind(fieldMetadata,_stmt._nativeConnection);
             }
 
             sbyte code = stmt.mysql_stmt_bind_result64(m_row);
@@ -178,20 +178,20 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
         {
-            if (m_row[i].Length > m_row[i].BufferLength)//data truncation
+            if (m_row[i].GetLength() > m_row[i].BufferLength)//data truncation
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
                 IMySqlField ft = new MYSQL_FIELD();
                 ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;
-                newbind[0].InitForBind(ft);
+                newbind[0].InitForBind(ft,_stmt._nativeConnection);
 
                 sbyte errorCode = _stmt.mysql_stmt_fetch_column(newbind, (uint)i, (uint)fieldOffset);
                 if (errorCode != 0)
                     throw new MySqlException(_stmt);
 
-                long result = Math.Min(length, newbind[0].Length - fieldOffset);
+                long result = Math.Min(length, newbind[0].GetLength() - fieldOffset);
                 newbind[0].GetBytes(buffer, (uint)result);
                 newbind[0].Dispose();
                 return result;
@@ -199,7 +199,7 @@ namespace MySQLDriverCS
             else
             {
                 m_row[i].GetBytes(buffer, (uint)length);
-                return m_row[i].Length;
+                return m_row[i].GetLength();
             }
         }
 
@@ -337,7 +337,7 @@ namespace MySQLDriverCS
 
         public bool RowIsNull(int i)
         {
-            return m_row[i].IsNull;
+            return m_row[i].GetIsNull();
         }
     }
 }

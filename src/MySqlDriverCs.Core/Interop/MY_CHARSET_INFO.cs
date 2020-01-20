@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace MySQLDriverCS.Interop
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public struct CharacterSet
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public struct MY_CHARSET_INFO
     {
         public uint number;     /* character set number              */
         public uint state;      /* character set state               */

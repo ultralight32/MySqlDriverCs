@@ -96,7 +96,7 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// buffer type
         /// </summary>
-        enum_field_types buffer_type; //  enum enum_field_types buffer_type;
+        public enum_field_types buffer_type; //  enum enum_field_types buffer_type;
 
         /// <summary>
         /// used if error is 0
@@ -107,7 +107,7 @@ namespace MySQLDriverCS.Interop
         /// set if integer type is unsigned
         /// </summary>
         /// <remarks> my_bool       is_unsigned; </remarks>
-        byte is_unsigned;
+        public byte is_unsigned;
 
         /// <summary>
         /// If used with mysql_send_long_data
@@ -151,30 +151,57 @@ namespace MySQLDriverCS.Interop
         /// <param name="len"></param>
         public void GetBytes(byte[] buff, uint len)
         {
-            if (!IsNull)
+            if (!GetIsNull())
             {
-                if (len < Length)
+                if (len < GetLength())
                     Marshal.Copy(buffer, buff, 0, (int)len);
                 else
-                    Marshal.Copy(buffer, buff, 0, (int)Length);
+                    Marshal.Copy(buffer, buff, 0, (int)GetLength());
             }
         }
         /// <summary>
         /// Inits structure for binding. 
         /// </summary>
         /// <param name="fieldMetadata"></param>
-        public void InitForBind(IMySqlField fieldMetadata)
+        public void InitForBind(IMySqlField fieldMetadata, NativeConnection nativeConnection)
         {
             buffer_type = fieldMetadata.Type;
             Type type = MySQLUtils.MySQLToNetType(buffer_type);
-            if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_JSON)
+            if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATE || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDATE)
             {
-                // TODO: SKip this case
-                throw new Exception();
+                SetBuffer(new byte[Marshal.SizeOf<MYSQL_TIME>()]);
             }
-            else if (type == typeof(string))
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TINY)
             {
-                buffer_length = fieldMetadata.Length;
+                SetBuffer(new byte[sizeof(byte)]);
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_SHORT)
+            {
+                SetBuffer(new byte[sizeof(ushort)]);
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_INT24 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_LONG)
+            {
+                SetBuffer(new byte[sizeof(uint)]);
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BIT || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_LONGLONG)
+            {
+                SetBuffer(new byte[sizeof(ulong)]);
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_JSON || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TINY_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_LONG_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_MEDIUM_BLOB)
+            {
+                var maxLen = 1024;
+                buffer = Marshal.AllocHGlobal((int)maxLen);
+                buffer_length = (uint)maxLen;
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VARCHAR || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_STRING || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VAR_STRING)
+            {
+                buffer_length = fieldMetadata.Length * nativeConnection.mysql_get_character_set_info().mbmaxlen; // reserve the max number of chars for this characterset
+                buffer = Marshal.StringToHGlobalAnsi(new string(' ', (int)buffer_length));
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DECIMAL || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDECIMAL)
+            {
+                var maxDecimalLengthString = 65 + 2; // 65 digits, 1 dot, 1 sign
+                buffer_length = (uint) (maxDecimalLengthString * nativeConnection.mysql_get_character_set_info().mbmaxlen); // reserve the max number of chars for this characterset
                 buffer = Marshal.StringToHGlobalAnsi(new string(' ', (int)buffer_length));
             }
             else if (type == typeof(sbyte[]) || type == typeof(byte[]))
@@ -184,12 +211,7 @@ namespace MySQLDriverCS.Interop
             }
             else
             {
-                int add = 0;
-                if (type == typeof(Int64))
-                {
-                    add = NativeConnection.INT64_ADDITIONAL_MEMORY_BUFFER;
-                }
-                buffer = Marshal.AllocHGlobal(Marshal.SizeOf(type) + add);
+                buffer = Marshal.AllocHGlobal(Marshal.SizeOf(type) + 0);
             }
             length = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
             is_null = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(sbyte)));
@@ -198,214 +220,18 @@ namespace MySQLDriverCS.Interop
         }
 
 
-        public void SetValue(object value)
+        public void ResetIsNull()
         {
-            if (value != null && value != DBNull.Value)
+            if (is_null != IntPtr.Zero)
             {
-                Type type = value.GetType();
-                if (buffer_type == enum_field_types.MYSQL_TYPE_TINY)
-                {
-                    if (value is bool o)
-                    {
-                        value = o ? (byte)1 : (byte)0;
-                    }
-
-                    if (value is byte)
-                    {
-                        var b = (byte)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(byte));
-                        Marshal.StructureToPtr(b, buffer, false);
-                        is_unsigned = 1;
-                    }
-                    else if (value is sbyte)
-                    {
-                        var b = (sbyte)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(sbyte));
-                        Marshal.StructureToPtr(b, buffer, false);
-                    }
-                    else throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                else if (buffer_type == enum_field_types.MYSQL_TYPE_SHORT)
-                {
-                    if (value is short)
-                    {
-                        var b = (short)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(short));
-                        Marshal.StructureToPtr(b, buffer, false);
-                    }
-                    else if (value is ushort)
-                    {
-                        var b = (ushort)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(ushort));
-                        Marshal.StructureToPtr(b, buffer, false);
-                        is_unsigned = 1;
-                    }
-                    else throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                else if (buffer_type == enum_field_types.MYSQL_TYPE_LONGLONG || buffer_type == enum_field_types.MYSQL_TYPE_BIT)
-                {
-                    if (value is long)
-                    {
-                        var b = (long)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(long));
-                        Marshal.StructureToPtr(b, buffer, false);
-                    }
-                    else if (value is ulong)
-                    {
-                        var b = (ulong)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(ulong));
-                        Marshal.StructureToPtr(b, buffer, false);
-                        is_unsigned = 1;
-                    }
-                    else throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                else if (buffer_type == enum_field_types.MYSQL_TYPE_LONG)
-                {
-                    if (value is int)
-                    {
-                        var b = (int)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(int));
-                        Marshal.StructureToPtr(b, buffer, false);
-                    }
-                    else if (value is uint)
-                    {
-                        var b = (uint)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(sizeof(uint));
-                        Marshal.StructureToPtr(b, buffer, false);
-                        is_unsigned = 1;
-                    }
-                    else throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                else if (buffer_type == enum_field_types.MYSQL_TYPE_INT24)
-                {
-                    if (value is int)
-                    {
-                        var b = (int)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(3);
-                        var bx = BitConverter.GetBytes(b).Take(3).ToArray();
-                        Marshal.Copy(bx, 0, buffer, 3);
-                        is_unsigned = 0;
-                    }
-                    else if (value is uint)
-                    {
-                        var b = (uint)value;
-                        if (buffer != IntPtr.Zero)
-                            Marshal.FreeHGlobal(buffer);
-                        buffer = Marshal.AllocHGlobal(3);
-                        var bx = BitConverter.GetBytes(b).Take(3).ToArray();
-                        Marshal.Copy(bx, 0, buffer, 3);
-                        is_unsigned = 1;
-                    }
-                    else throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                else if (value is byte[] blob && (buffer_type == enum_field_types.MYSQL_TYPE_BLOB || buffer_type == enum_field_types.MYSQL_TYPE_TINY_BLOB || buffer_type == enum_field_types.MYSQL_TYPE_MEDIUM_BLOB || buffer_type == enum_field_types.MYSQL_TYPE_LONG_BLOB))
-                {
-                    buffer = Marshal.AllocHGlobal(blob.Length);
-                    Marshal.Copy(blob, 0, buffer, blob.Length);
-                    Length = (uint) blob.Length;
-                }
-
-                else if (type == typeof(string))
-                {
-                    if (buffer != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(buffer);
-                    }
-
-                    buffer = Marshal.StringToHGlobalAnsi((string)value);
-                }
-                else if (buffer_type == enum_field_types.MYSQL_TYPE_DECIMAL || buffer_type == enum_field_types.MYSQL_TYPE_NEWDECIMAL)
-                {
-                    if (buffer != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(buffer);
-                    }
-
-                    var s = ((decimal)value).ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
-                    buffer = Marshal.StringToHGlobalAnsi(s);
-                }
-                else if (value is Array)
-                {
-                    if (buffer != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(buffer);
-                    }
-
-                    if (value is byte[] || value is sbyte[])
-                    {
-                        byte[] byteArrValue = (byte[])value;
-                        int size = byteArrValue.Length > 0 ? Marshal.SizeOf(byteArrValue[0]) * byteArrValue.Length : 0;
-                        // Initialize unmanged memory to hold the array.
-                        buffer = Marshal.AllocHGlobal(size);
-                        // Copy the array to unmanaged memory.
-                        Marshal.Copy(byteArrValue, 0, buffer, byteArrValue.Length);
-                    }
-                    else
-                    {
-                        buffer = Marshal.UnsafeAddrOfPinnedArrayElement((Array)value, 0);
-                    }
-                }
-                else if (type == typeof(DateTime))
-                {
-                    if (buffer != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(buffer);
-                    }
-
-                    DateTime dvalue = (DateTime)value;
-                    MYSQL_TIME mysqltime = new MYSQL_TIME();
-                    mysqltime.year = (uint)dvalue.Year;
-                    mysqltime.month = (uint)dvalue.Month;
-                    mysqltime.day = (uint)dvalue.Day;
-                    mysqltime.hour = (uint)dvalue.Hour;
-                    mysqltime.minute = (uint)dvalue.Minute;
-                    mysqltime.second = (uint)dvalue.Second;
-                    mysqltime.second_part = (uint)(dvalue.Millisecond * 1000);
-                    buffer = Marshal.AllocHGlobal(Marshal.SizeOf(mysqltime));
-                    Marshal.StructureToPtr(mysqltime, buffer, false);
-                }
-                else
-                {
-                    if (buffer != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(buffer);
-                    }
-
-                    buffer = Marshal.AllocHGlobal(Marshal.SizeOf(value));
-                    Marshal.StructureToPtr(value, buffer, false);
-                }
-            }
-            else
-            {
-                if (buffer != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(buffer);
-                    buffer = IntPtr.Zero;
-                }
+                Marshal.FreeHGlobal(buffer);
+                is_null = IntPtr.Zero;
             }
         }
 
         public object GetValue(int columnIndex, NativeStatement nativeStatement, MYSQL_FIELD fieldMetadata)
         {
-            if (IsNull || buffer_type == enum_field_types.MYSQL_TYPE_NULL)
+            if (GetIsNull() || buffer_type == enum_field_types.MYSQL_TYPE_NULL)
             {
                 return DBNull.Value;
             }
@@ -477,14 +303,24 @@ namespace MySQLDriverCS.Interop
                 return encoding.GetString(x);
 
             }
+            if (buffer_type == enum_field_types.MYSQL_TYPE_DATE)
+            {
+                MYSQL_TIME time = (MYSQL_TIME)Marshal.PtrToStructure(buffer, typeof(MYSQL_TIME));
+                return new DateTime((int)time.year, (int)time.month, (int)time.day);
 
+            }
             if (buffer_type == enum_field_types.MYSQL_TYPE_TIME || buffer_type == enum_field_types.MYSQL_TYPE_TIME2)
             {
                 MYSQL_TIME time = (MYSQL_TIME)Marshal.PtrToStructure(buffer, typeof(MYSQL_TIME));
                 time.year = 1;
                 time.month = 1;
                 time.day = 1;
-                return new DateTime((int)time.year, (int)time.month, (int)time.day, (int)time.hour, (int)time.minute, (int)time.second, (int)(time.second_part / 1000.0));
+                /*
+                    There is one exception to this rule though if this structure holds time
+                    value (time_type == MYSQL_TIMESTAMP_TIME) days and hour member can hold
+                    bigger values 
+                    */
+                return new DateTime((int)time.year, (int)time.month, (int)time.day, (int)time.hour % 24, (int)time.minute, (int)time.second, (int)(time.second_part / 1000.0));
 
             }
             if (buffer_type == enum_field_types.MYSQL_TYPE_DATETIME || buffer_type == enum_field_types.MYSQL_TYPE_DATETIME2 || buffer_type == enum_field_types.MYSQL_TYPE_TIMESTAMP || buffer_type == enum_field_types.MYSQL_TYPE_TIMESTAMP2)
@@ -516,6 +352,9 @@ namespace MySQLDriverCS.Interop
             }
             if (buffer_type == enum_field_types.MYSQL_TYPE_BIT)
             {
+                //  string string_data = Marshal.PtrToStringAnsi(buffer/*, (int)GetLength()*/);
+                var blen = this.buffer_length;
+                var len = this.GetLength();
                 //return BitConverter.ToUInt64(BitConverter.GetBytes(Marshal.ReadInt64(buffer)), 0);
                 var byteCnt = (7 + fieldMetadata.length) / 8;
                 var b = new byte[sizeof(ulong)];
@@ -529,7 +368,7 @@ namespace MySQLDriverCS.Interop
                 || buffer_type == enum_field_types.MYSQL_TYPE_VARCHAR
                 || buffer_type == enum_field_types.MYSQL_TYPE_VAR_STRING)
             {
-                string string_data = Marshal.PtrToStringAnsi(buffer, (int)Length);
+                string string_data = Marshal.PtrToStringAnsi(buffer, (int)GetLength());
                 int index = string_data.IndexOf('\0');
                 if (index >= 0)
                     string_data = string_data.Substring(0, index);
@@ -544,7 +383,7 @@ namespace MySQLDriverCS.Interop
             if (buffer_type == enum_field_types.MYSQL_TYPE_DECIMAL
                 || buffer_type == enum_field_types.MYSQL_TYPE_NEWDECIMAL)
             {
-                string string_data = Marshal.PtrToStringAnsi(buffer, (int)Length);
+                string string_data = Marshal.PtrToStringAnsi(buffer, (int)GetLength());
                 int index = string_data.IndexOf('\0');
                 if (index >= 0)
                     string_data = string_data.Substring(0, index);
@@ -572,7 +411,7 @@ namespace MySQLDriverCS.Interop
             Type type = ret;
             if (type == typeof(string))
             {
-                string string_data = Marshal.PtrToStringAnsi(buffer, (int)Length);
+                string string_data = Marshal.PtrToStringAnsi(buffer, (int)GetLength());
                 int index = string_data.IndexOf('\0');
                 if (index >= 0)
                     string_data = string_data.Substring(0, index);
@@ -585,7 +424,7 @@ namespace MySQLDriverCS.Interop
             }
             else if (type == typeof(sbyte[]))
             {
-                uint len = Length;
+                uint len = GetLength();
                 if (buffer_length < len)
                     len = buffer_length;
                 byte[] result = new byte[len];
@@ -616,7 +455,7 @@ namespace MySQLDriverCS.Interop
 
         private byte[] GetAllBytes(int id, NativeStatement _stmt)
         {
-            if (IsNull)
+            if (GetIsNull())
             {
                 return null;
                 //return DBNull.Value;
@@ -665,20 +504,20 @@ namespace MySQLDriverCS.Interop
 
         private long GetBytes(int i, long fieldOffset, byte[] buf, int len, NativeStatement _stmt)
         {
-            if (Length > BufferLength)//data truncation
+            if (GetLength() > BufferLength)//data truncation
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
                 IMySqlField ft = new MYSQL_FIELD();
                 ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)len;
-                newbind[0].InitForBind(ft);
+                newbind[0].InitForBind(ft,_stmt._nativeConnection);
 
                 sbyte errorCode = _stmt.mysql_stmt_fetch_column(newbind, (uint)i, (uint)fieldOffset);
                 if (errorCode != 0)
                     throw new MySqlException(_stmt);
 
-                long result = Math.Min(len, newbind[0].Length - fieldOffset);
+                long result = Math.Min(len, newbind[0].GetLength() - fieldOffset);
                 newbind[0].GetBytes(buf, (uint)result);
                 newbind[0].Dispose();
                 return result;
@@ -686,89 +525,107 @@ namespace MySQLDriverCS.Interop
             else
             {
                 GetBytes(buf, (uint)len);
-                return Length;
+                return GetLength();
             }
         }
 
         /// <summary>
         /// Length
         /// </summary>
-        public uint Length
+        public void SetLength(uint value)
         {
-            get
+            if (length == IntPtr.Zero)
             {
-                if (this.length == IntPtr.Zero) return 0;
-                else
-                    return (uint)Marshal.ReadInt32(this.length);
+                length = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
             }
-            set
-            {
-                if (length == IntPtr.Zero)
-                {
-                    length = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
-                }
-                Marshal.WriteInt32(length, (int)value);
-            }
+
+            Marshal.WriteInt32(length, (int)value);
         }
+
+        /// <summary>
+        /// Length
+        /// </summary>
+        public uint GetLength()
+        {
+            if (this.length == IntPtr.Zero) return 0;
+            return (uint)Marshal.ReadInt32(this.length);
+        }
+
         /// <summary>
         /// IsNull
         /// </summary>
-        public bool IsNull
+        public void SetIsNull(bool value)
         {
-            get
+            if (is_null == IntPtr.Zero)
             {
-                sbyte s = (sbyte)Marshal.ReadByte(this.is_null);
-                return s == 1;
+                is_null = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(sbyte)));
             }
-            set
-            {
 
-                if (is_null == IntPtr.Zero)
-                {
-                    is_null = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(sbyte)));
-                }
-                Marshal.WriteByte(is_null, value ? (byte)1 : (byte)0);
-            }
+            Marshal.WriteByte(is_null, value ? (byte)1 : (byte)0);
         }
+
+        /// <summary>
+        /// IsNull
+        /// </summary>
+        public bool GetIsNull()
+        {
+            return (sbyte)Marshal.ReadByte(this.is_null) == 1;
+        }
+
         /// <summary>
         /// Dispose
         /// </summary>
         public void Dispose()
         {
+
+            ResetIsNull();
+            ResetLength();
+            ResetBuffer();
+
+        }
+
+        /// <summary>
+        /// Frees buffer and set it to NULL
+        /// </summary>
+        public void ResetBuffer()
+        {
+            if (buffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(buffer);
+                buffer = IntPtr.Zero;
+            }
+
+            buffer_length = 0;
+        }
+
+        public void SetBuffer(byte[] bindInputBuffer)
+        {
+            if (buffer != IntPtr.Zero)
+                Marshal.FreeHGlobal(buffer);
+            buffer = Marshal.AllocHGlobal(bindInputBuffer.Length);
+            Marshal.Copy(bindInputBuffer, 0, buffer, bindInputBuffer.Length);
+            buffer_length = (uint)bindInputBuffer.Length;
+        }
+
+        /// <summary>
+        /// Frees length and set it to NULL
+        /// </summary>
+        public void ResetLength()
+        {
+            if (length == IntPtr.Zero) return;
+            //Marshal.FreeHGlobal(length); Cannot free length, for some reason it throws "The handle is invalid" in some cases
+            // cmurialdo fix
             try
             {
-                if (is_null != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(is_null);
-                    is_null = IntPtr.Zero;
-                }
-                if (length != IntPtr.Zero)
-                {
-                    //Marshal.FreeHGlobal(length); Cannot free length, for some reason it throws "The handle is invalid" in some cases
-                    // cmurialdo fix
-                    try
-                    {
-                        Marshal.FreeHGlobal(length);
-                    }
-                    catch (COMException)
-                    {
-                        // Previously we didn't release at all, now we try to release and catch exception
-                    }
-                    finally
-                    {
-                        length = IntPtr.Zero;
-                    }
-                }
-                if (buffer != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(buffer);
-                    buffer = IntPtr.Zero;
-                }
+                Marshal.FreeHGlobal(length);
             }
-            catch (COMException ex)
+            catch (COMException)
             {
-                Console.WriteLine(ex.Message);
-                throw ex;
+                // Previously we didn't release at all, now we try to release and catch exception
+            }
+            finally
+            {
+                length = IntPtr.Zero;
             }
         }
     }

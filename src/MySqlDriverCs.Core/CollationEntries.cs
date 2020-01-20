@@ -144,5 +144,9 @@ namespace MySqlDriverCs
         {
             return Entries.FirstOrDefault(x => x.CollationId == collationId)?.Encoding;
         }
+        public static CollationEntry TryGet(int collationId)
+        {
+            return Entries.FirstOrDefault(x => x.CollationId == collationId);
+        }
     }
 }

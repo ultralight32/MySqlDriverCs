@@ -55,15 +55,15 @@ namespace MySQLDriverCS
                 if (Value == null || Value == DBNull.Value)
                     resQuery = resQuery.Replace(paramName, "NULL");
                 else
-                if ((Value.GetType() == typeof(int)) ||
-                    (Value.GetType() == typeof(long)) ||
-                    (Value.GetType() == typeof(short)) ||
-                    (Value.GetType() == typeof(decimal)) ||
-                    (Value.GetType() == typeof(float)) ||
-                    (Value.GetType() == typeof(double)))
+                if (Value is int ||
+                    Value is long ||
+                    Value is short ||
+                    Value is decimal ||
+                    Value is float ||
+                    Value is double)
                     resQuery = resQuery.Replace(paramName, Convert.ToString(Value, CultureInfo.InvariantCulture.NumberFormat));
                 else
-                if (Value.GetType() == typeof(DateTime))
+                if (Value is DateTime)
                 {
                     DateTime dt = (DateTime)Value;
                     string dateStr;
@@ -74,11 +74,11 @@ namespace MySQLDriverCS
                     else if (param.DbType == MySqlDbType.DateTime)
                     {
                         dateStr = " \"" + dt.Year.ToString("D4") + "-" + dt.Month.ToString("D2") + "-" + dt.Day.ToString("D2") +
-                                  " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + ((dt.Millisecond > 0) ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";
+                                  " " + dt.Hour + ":" + dt.Minute + ":" + dt.Second + (dt.Millisecond > 0 ? "." + dt.Millisecond.ToString("D3") : "") + "\" ";
                     }
                     else if (param.DbType == MySqlDbType.Year)
                     {
-                        dateStr = dt.Year.ToString(CultureInfo.InvariantCulture);
+                        dateStr = "'"+dt.Year.ToString(CultureInfo.InvariantCulture)+"'";
                     }
                     else
                     {

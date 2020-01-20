@@ -24,6 +24,12 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Time type
         /// </summary>
-        public /*enum enum_mysql_timestamp_type*/uint time_type;
+        public enum_mysql_timestamp_type time_type;
     }
+
+    public enum enum_mysql_timestamp_type: int
+    {
+        MYSQL_TIMESTAMP_NONE = -2, MYSQL_TIMESTAMP_ERROR = -1,
+        MYSQL_TIMESTAMP_DATE = 0, MYSQL_TIMESTAMP_DATETIME = 1, MYSQL_TIMESTAMP_TIME = 2
+    };
 }

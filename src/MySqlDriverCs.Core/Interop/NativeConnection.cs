@@ -35,14 +35,14 @@ namespace MySQLDriverCS.Interop
     /// </summary>
     public class NativeConnection : IDisposable
     {
-     
+        internal IntPtr MySql;
         private static readonly HashSet<string> Win32PathsAlreadyAdded = new HashSet<string>();
 
+        private static bool _mysqlServerInitCalled = false;
         private readonly INativeProxy _nativeProxy;
 
         public NativeConnection(string dllPath, INativeTracer nativeTracer)
         {
-
             _nativeProxy = NativeProxyFactory.GetProxy(nativeTracer);
             if (!string.IsNullOrWhiteSpace(dllPath) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -77,46 +77,30 @@ namespace MySQLDriverCS.Interop
                 throw new MySqlException("mysql_get_client_info failed");
             ClientVersion = Marshal.PtrToStringAnsi(vers);
         }
+        public string ClientVersion { get; }
 
-        internal IntPtr MySql;
-
-        private static bool _mysqlServerInitCalled = false;
-
-        public int mysql_options(mysql_option option, ref uint value)
+        public NativeStatement CreateStatement()
         {
-            return _nativeProxy.mysql_options(MySql, option, ref value);
+            return new NativeStatement(this, _nativeProxy);
         }
 
-        public IntPtr mysql_real_connect(string host, string user, string passwd, string db, uint port, string unixSocket, int clientFlag)
+        public void Dispose()
         {
-            return _nativeProxy.mysql_real_connect(MySql, host, user, passwd, db, port, unixSocket, clientFlag);
+            if (MySql != IntPtr.Zero)
+            {
+                _nativeProxy.mysql_close(MySql);
+                MySql = IntPtr.Zero;
+            }
         }
 
-        public int mysql_query(string query)
+        public uint mysql_affected_rows()
         {
-            return _nativeProxy.mysql_query(MySql, query);
-        }
-
-        public void mysql_ping()
-        {
-            var rv = _nativeProxy.mysql_ping(MySql);
-            if (rv == 0) return;
-            throw new MySqlException(this);
-        }
-
-        public IntPtr mysql_store_result()
-        {
-            return _nativeProxy.mysql_store_result(MySql);
+            return _nativeProxy.mysql_affected_rows(MySql);
         }
 
         public uint mysql_errno()
         {
             return _nativeProxy.mysql_errno(MySql);
-        }
-
-        private IntPtr mysql_error_native()
-        {
-            return _nativeProxy.mysql_error_native(MySql);
         }
 
         public string mysql_error()
@@ -130,9 +114,9 @@ namespace MySQLDriverCS.Interop
             return _nativeProxy.mysql_field_count(MySql);
         }
 
-        public uint mysql_affected_rows()
+        public MY_CHARSET_INFO mysql_get_character_set_info()
         {
-            return _nativeProxy.mysql_affected_rows(MySql);
+            return _nativeProxy.mysql_get_character_set_info(MySql);
         }
 
         public IntPtr mysql_get_client_info()
@@ -140,9 +124,31 @@ namespace MySQLDriverCS.Interop
             return _nativeProxy.mysql_get_client_info();
         }
 
-        public static int INT64_ADDITIONAL_MEMORY_BUFFER = 4;
+        public int mysql_options(mysql_option option, ref uint value)
+        {
+            return _nativeProxy.mysql_options(MySql, option, ref value);
+        }
 
-        public string ClientVersion { get; }
+        public void mysql_ping()
+        {
+            var rv = _nativeProxy.mysql_ping(MySql);
+            if (rv == 0) return;
+            throw new MySqlException(this);
+        }
+
+        public int mysql_query(string query)
+        {
+            return _nativeProxy.mysql_query(MySql, query);
+        }
+
+        public IntPtr mysql_real_connect(string host, string user, string passwd, string db, uint port, string unixSocket, int clientFlag)
+        {
+            return _nativeProxy.mysql_real_connect(MySql, host, user, passwd, db, port, unixSocket, clientFlag);
+        }
+        public uint mysql_real_escape_string(System.Text.StringBuilder to, string from, uint length)
+        {
+            return _nativeProxy.mysql_real_escape_string(MySql, to, from, length);
+        }
 
         public int mysql_select_db(string dbname)
         {
@@ -154,23 +160,13 @@ namespace MySQLDriverCS.Interop
             return _nativeProxy.mysql_set_character_set(MySql, csname);
         }
 
-        public uint mysql_real_escape_string(System.Text.StringBuilder to, string from, uint length)
+        public IntPtr mysql_store_result()
         {
-            return _nativeProxy.mysql_real_escape_string(MySql, to, from, length);
+            return _nativeProxy.mysql_store_result(MySql);
         }
-
-        public void Dispose()
+        private IntPtr mysql_error_native()
         {
-            if (MySql != IntPtr.Zero)
-            {
-                _nativeProxy.mysql_close(MySql);
-                MySql = IntPtr.Zero;
-            }
-        }
-
-        public NativeStatement CreateStatement()
-        {
-            return new NativeStatement(this,_nativeProxy);
+            return _nativeProxy.mysql_error_native(MySql);
         }
     }
 }

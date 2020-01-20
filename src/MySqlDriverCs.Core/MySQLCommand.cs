@@ -273,7 +273,7 @@ namespace MySQLDriverCS
                         throw new MySqlException("Connection must be valid and open.");
                     }
 
-                    _statement = UsePreparedStatement ? (Statement)new PreparedStatement(_connection, CommandText) : new SqlInjectedParametersStatement(_connection, CommandText);
+                    _statement = (UsePreparedStatement||Parameters.Count>0) ? (Statement)new PreparedStatement(_connection, CommandText) : new SqlInjectedParametersStatement(_connection, CommandText);
                 }
                 return _statement;
             }

@@ -20,7 +20,7 @@ foreach(string platform in new[]{"Win32","Linux"})
          template=template.Substring(ndx);
     } 
     first=false;
-     
+      
 #>
 <#=template #>
 <# 

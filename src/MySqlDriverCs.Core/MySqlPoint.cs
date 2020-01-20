@@ -10,8 +10,9 @@ namespace MySQLDriverCS
     {
         private readonly double[] _coordinates;
 
-        public MySqlPoint(params double[] coordinates)
+        public MySqlPoint(double x, double y)
         {
+            var coordinates = new double[]{x,y};
             if (coordinates == null) throw new ArgumentNullException(nameof(coordinates));
             _coordinates = coordinates.ToArray();
         }

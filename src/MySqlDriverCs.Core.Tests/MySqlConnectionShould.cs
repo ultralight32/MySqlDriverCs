@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -256,16 +257,16 @@ namespace MySqlDriverCs.Core.Tests
                 yield return new PreparedFieldTypeTest( "DECIMAL(18,6)", new MySQLParameter("value", MySqlDbType.Decimal, ParameterDirection.Input, -345435.567894m), -345435.567894m );
                 yield return new PreparedFieldTypeTest( "FLOAT", new MySQLParameter("value", MySqlDbType.Float, ParameterDirection.Input, 1.25e-5f), 1.25e-5f );
                 yield return new PreparedFieldTypeTest( "DOUBLE", new MySQLParameter("value", MySqlDbType.Double, ParameterDirection.Input, 345435.567894d), 345435.567894d );
-                yield return new PreparedFieldTypeTest( "BIT(2)", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, (ulong)1), ((ulong)1) );
+                yield return new PreparedFieldTypeTest( "BIT(2)", new MySQLParameter("value", MySqlDbType.Bit, ParameterDirection.Input, (ulong)1), ((ulong)1) );
 
                 // time
                 yield return new PreparedFieldTypeTest( "DATE", new MySQLParameter("value", MySqlDbType.Date, ParameterDirection.Input, new DateTime(1, 1, 1)), new DateTime(1, 1, 1));
                 yield return new PreparedFieldTypeTest( "TIME", new MySQLParameter("value", MySqlDbType.Time, ParameterDirection.Input, new DateTime(1, 1, 1, 13, 40, 45)), new DateTime(1, 1, 1, 13, 40, 45) );
                 yield return new PreparedFieldTypeTest( "DATETIME", new MySQLParameter("value", MySqlDbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
-                yield return new PreparedFieldTypeTest( "TIMESTAMP", new MySQLParameter("value", MySqlDbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
+                yield return new PreparedFieldTypeTest( "TIMESTAMP", new MySQLParameter("value", MySqlDbType.TimeStamp, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
 
         
-                yield return new PreparedFieldTypeTest( "YEAR", new MySQLParameter("value", MySqlDbType.DateTime, ParameterDirection.Input, new DateTime(2020, 1, 1)), new DateTime(2020, 1, 1) );
+                yield return new PreparedFieldTypeTest( "YEAR", new MySQLParameter("value", MySqlDbType.Year, ParameterDirection.Input, new DateTime(2020, 1, 1)), new DateTime(2020, 1, 1) );
 
                 // varchars
                 yield return new PreparedFieldTypeTest( "VARCHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
@@ -303,6 +304,221 @@ namespace MySqlDriverCs.Core.Tests
                 return GetEnumerator();
             }
         }
+
+        [Fact]
+        public void PreparedStatementOfBlobIsInserted()
+        {
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE BLOB,PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, ?)", c))
+            {
+                cmd3.UsePreparedStatement = true;
+                cmd3.Parameters.Add(new MySQLParameter("", MySqlDbType.Binary, ParameterDirection.Input, Encoding.UTF8.GetBytes("sure.")));
+                cmd3.ExecuteNonQuery();
+            }
+
+            var expectedValue = "sure.";
+            using (var cmd = new MySQLCommand("select id, to_base64(COL_VALUE) from number_type_test where id=0", c))
+            {
+                cmd.UsePreparedStatement = false;
+
+                var reader = cmd.ExecuteReader();
+                Assert.True(reader.Read());
+
+                var ordinal = 1;
+                var xx = reader.GetValue(ordinal);
+                Assert.IsType<string>(xx);
+                var executeScalar = Encoding.UTF8.GetString(Convert.FromBase64String((string)xx));
+
+                Assert.NotNull(executeScalar);
+                if (expectedValue == null)
+                    Assert.Null(executeScalar);
+                else
+                {
+
+                    Assert.IsType(expectedValue.GetType(), executeScalar);
+                    if (expectedValue is string)
+                        expectedValue = "'" + expectedValue.ToString() + "'";
+                    if (executeScalar is string)
+                        executeScalar = "'" + executeScalar.ToString() + "'";
+                    Assert.Equal(expectedValue, executeScalar);
+                }
+
+                Assert.False(reader.Read());
+            }
+        }
+
+        [Fact]
+        public void PreparedStatementOfBlobIsFetched()
+        {
+            var expectedValue = "sure.";
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE BLOB,PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, from_base64('{Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedValue))}'))", c))
+            {
+                cmd3.UsePreparedStatement = false;
+                cmd3.ExecuteNonQuery();
+            }
+
+  
+            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=0", c))
+            {
+                cmd.UsePreparedStatement = true;
+
+                var reader = cmd.ExecuteReader();
+                Assert.True(reader.Read());
+
+                var ordinal = reader.GetOrdinal("COL_VALUE");
+                var executeScalar = reader.GetValue(ordinal);
+                Assert.IsType<byte[]>(executeScalar);
+                var actualValue = Encoding.UTF8.GetString((byte[]) executeScalar);
+
+                Assert.NotNull(actualValue);
+                if (expectedValue == null)
+                    Assert.Null(actualValue);
+                else
+                {
+
+                    Assert.IsType(expectedValue.GetType(), actualValue);
+                    if (expectedValue is string)
+                        expectedValue = "'" + expectedValue.ToString() + "'";
+                    if (actualValue is string)
+                        actualValue = "'" + actualValue.ToString() + "'";
+                    Assert.Equal(expectedValue, actualValue);
+                }
+
+                Assert.False(reader.Read());
+            }
+        }
+
+        [Fact]
+        public void NonPreparedStatementOfBitIsInserted()
+        {
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE BIT(2),PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, B'01')", c))
+            {
+                cmd3.ExecuteNonQuery();
+            }
+
+            var expectedValue = "1";
+            using (var cmd = new MySQLCommand("select id, HEX(COL_VALUE) from number_type_test where id=0", c))
+            {
+                cmd.UsePreparedStatement = false;
+
+                var reader = cmd.ExecuteReader();
+                Assert.True(reader.Read());
+
+                var ordinal = 1;
+                var executeScalar = reader.GetValue(ordinal);
+                Assert.IsType<string>(executeScalar);
+                var actualValue = (string)executeScalar;
+
+                Assert.NotNull(actualValue);
+                Assert.IsType(expectedValue.GetType(), actualValue);
+                Assert.Equal(expectedValue, actualValue);
+
+                Assert.False(reader.Read());
+            }
+        }
+
+        [Fact]
+        public void PreparedStatementOfBitIsInserted()
+        {
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE BIT(2),PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, ?)", c))
+            {
+                cmd3.UsePreparedStatement = true;
+                cmd3.Parameters.Add(new MySQLParameter("", MySqlDbType.Bit, ParameterDirection.Input, 1));
+                cmd3.ExecuteNonQuery();
+            }
+
+            var expectedValue = "1";
+            using (var cmd = new MySQLCommand("select id, HEX(COL_VALUE) from number_type_test where id=0", c))
+            {
+                cmd.UsePreparedStatement = false;
+
+                var reader = cmd.ExecuteReader();
+                Assert.True(reader.Read());
+
+                var ordinal = 1;
+                var executeScalar = reader.GetValue(ordinal);
+                Assert.IsType<string>(executeScalar);
+                var actualValue = (string)executeScalar;
+
+                Assert.NotNull(actualValue);
+                Assert.IsType(expectedValue.GetType(), actualValue);
+                Assert.Equal(expectedValue, actualValue);
+
+                Assert.False(reader.Read());
+            }
+        }
+
+        [Fact]
+        public void PreparedStatementOfBitIsFetched()
+        {
+            var expectedValue = (ulong)1;
+            var c = CachedConnection;
+
+            using (var cmd1 = new MySQLCommand("DROP TABLE IF EXISTS number_type_test", c))
+                cmd1.ExecuteNonQuery();
+
+            using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE bit(2),PRIMARY KEY (id));", c))
+                cmd2.ExecuteNonQuery();
+
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, B'01')", c))
+            {
+                cmd3.UsePreparedStatement = false;
+                cmd3.ExecuteNonQuery();
+            }
+
+
+            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=0", c))
+            {
+                cmd.UsePreparedStatement = true;
+
+                var reader = cmd.ExecuteReader();
+                Assert.True(reader.Read());
+
+                var ordinal = reader.GetOrdinal("COL_VALUE");
+                var executeScalar = reader.GetValue(ordinal);
+                Assert.IsType<ulong>(executeScalar);
+                var actualValue = (ulong) executeScalar;
+
+
+                Assert.IsType(expectedValue.GetType(), actualValue);
+
+                Assert.Equal(expectedValue, actualValue);
+
+                Assert.False(reader.Read());
+            }
+        }
+
 
         [Theory]
         [ClassData(typeof(PreparedFieldTypeTestData))]
@@ -374,14 +590,14 @@ namespace MySqlDriverCs.Core.Tests
             using (var cmd2 = new MySQLCommand($@"CREATE TABLE number_type_test ( id INT NOT NULL,COL_VALUE {mySqlTypeDeclaration},PRIMARY KEY (id));", c))
                 cmd2.ExecuteNonQuery();
 
-            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,@value);", c))
+            using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0,?);", c))
             {
                 cmd3.UsePreparedStatement = false;
                 cmd3.Parameters.Add(inputParameter);
                 cmd3.ExecuteNonQuery();
             }
 
-            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=@id", c))
+            using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
             {
                 cmd.UsePreparedStatement = false;
                 var p = new MySQLParameter("@id", MySqlDbType.Int);

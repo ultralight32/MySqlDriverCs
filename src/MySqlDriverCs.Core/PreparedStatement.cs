@@ -1,8 +1,7 @@
-using MySQLDriverCS.Interop;
 using System;
 using System.Data;
-using System.Data.Common;
 using System.Runtime.InteropServices;
+using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS
 {
@@ -212,19 +211,30 @@ namespace MySQLDriverCS
 
             for (int i = 0; i < m_parameters.Count; i++)
             {
-                MySQLParameter param = (MySQLParameter)m_parameters[i];
-                m_bindparms[i].Type = param.GetFieldType();
-          
+                MySQLParameter param = m_parameters[i];
 
-                m_bindparms[i].SetValue(param.Value);
-                m_bindparms[i].IsNull = param.Value == null || param.Value == DBNull.Value;
-                if (param.Value != null && param.Value is string)
+                BindInput bindInput = param.GetBindInput();
+                if (bindInput != null)
                 {
-                    m_bindparms[i].Length = (uint)connection.CharacterEncoding.GetBytes((string)param.Value).Length; //si es string
+                    m_bindparms[i].buffer_type = bindInput.BufferType;
+                    if (bindInput.Buffer == null)
+                        m_bindparms[i].ResetBuffer();
+                    else
+                        m_bindparms[i].SetBuffer(bindInput.Buffer);
+
+                    if (bindInput.IsNull.HasValue)
+                        m_bindparms[i].SetIsNull(bindInput.IsNull.Value);
+                    else
+                        m_bindparms[i].ResetIsNull();
+                    if (bindInput.Length.HasValue)
+                        m_bindparms[i].SetLength((uint) bindInput.Length.Value);
+                    else
+                        m_bindparms[i].ResetLength();
+                    m_bindparms[i].is_unsigned = (byte) (bindInput.IsUnsigned?1:0);
                 }
                 else
                 {
-                    m_bindparms[i].Length = (uint)param.Size;
+                   throw new NotSupportedException();
                 }
             }
             int code = stmt.mysql_stmt_bind_param(m_bindparms);
@@ -240,14 +250,11 @@ namespace MySQLDriverCS
                 uint code = stmt.mysql_stmt_errno();
                 if (code != 1062)//Duplicated record ER_DUP_ENTRY
                     throw new MySqlException(stmt);
-                else
-                    throw new MySqlException(stmt, "Duplicated record");
+                throw new MySqlException(stmt, "Duplicated record");
             }
-            else
-            {
-                uint affectedRows = stmt.mysql_stmt_affected_rows();
-                return (int)affectedRows;
-            }
+
+            uint affectedRows = stmt.mysql_stmt_affected_rows();
+            return (int)affectedRows;
         }
 
         internal override IDataReader ExecuteReader(bool closeConnection)
@@ -267,10 +274,8 @@ namespace MySQLDriverCS
             {
                 throw new MySqlException(stmt);
             }
-            else
-            {
-                return new MySQLRealQueryDataReader(m_field_count, stmt, this.connection, closeConnection);
-            }
+
+            return new MySQLRealQueryDataReader(m_field_count, stmt, connection, closeConnection);
         }
 
         internal override int ExecuteCall()
