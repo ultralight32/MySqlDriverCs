@@ -1,4 +1,4 @@
-using MySqlDriverCs;
+using MySQLDriverCS;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -158,7 +158,7 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Inits structure for binding.
         /// </summary>
-        public void InitForBind(IMySqlField fieldMetadata, NativeConnection nativeConnection)
+        public void InitForBind(MYSQL_FIELD fieldMetadata, NativeConnection nativeConnection)
         {
             buffer_type = fieldMetadata.Type;
             if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATE || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDATE)
@@ -489,7 +489,7 @@ namespace MySQLDriverCS.Interop
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
-                IMySqlField ft = new MYSQL_FIELD();
+                var ft = new MYSQL_FIELD();
                 ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)len;
                 newbind[0].InitForBind(ft, _stmt._nativeConnection);

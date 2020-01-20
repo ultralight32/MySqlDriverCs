@@ -9,7 +9,7 @@ using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MySqlDriverCs.Core.Tests
+namespace MySQLDriverCS.Core.Tests
 {
     public class MySqlCommandShould : BaseTest, IDisposable
     {
@@ -243,50 +243,50 @@ namespace MySqlDriverCs.Core.Tests
             private IEnumerable<PreparedFieldTypeTest> DataTypes()
             {
                 // numerics
-                yield return new PreparedFieldTypeTest("TINYINT", new MySQLParameter("value", MySqlDbType.Byte, ParameterDirection.Input, (sbyte)-77), (sbyte)-77);
-                yield return new PreparedFieldTypeTest( "TINYINT(1)", new MySQLParameter("value",MySqlDbType.Boolean,ParameterDirection.Input,true),  true );
-                yield return new PreparedFieldTypeTest( "TINYINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Byte, ParameterDirection.Input, byte.MaxValue), byte.MaxValue );
-                yield return new PreparedFieldTypeTest( "SMALLINT", new MySQLParameter("value", MySqlDbType.Short, ParameterDirection.Input, short.MinValue), short.MinValue );
-                yield return new PreparedFieldTypeTest( "SMALLINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Short, ParameterDirection.Input, ushort.MaxValue), ushort.MaxValue );
-                yield return new PreparedFieldTypeTest( "MEDIUMINT", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, 16777215/2), 16777215/2 );
-                yield return new PreparedFieldTypeTest( "MEDIUMINT UNSIGNED", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, (uint)16777215), (uint)16777215 );
-                yield return new PreparedFieldTypeTest( "INT", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, int.MinValue), int.MinValue );
-                yield return new PreparedFieldTypeTest( "INT UNSIGNED", new MySQLParameter("value", MySqlDbType.Int, ParameterDirection.Input, uint.MaxValue), uint.MaxValue );
-                yield return new PreparedFieldTypeTest( "BIGINT", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, long.MinValue), long.MinValue );
-                yield return new PreparedFieldTypeTest( "BIGINT UNSIGNED", new MySQLParameter("value", MySqlDbType.BigInt, ParameterDirection.Input, ulong.MaxValue), ulong.MaxValue );
-                yield return new PreparedFieldTypeTest( "DECIMAL(18,6)", new MySQLParameter("value", MySqlDbType.Decimal, ParameterDirection.Input, -345435.567894m), -345435.567894m );
-                yield return new PreparedFieldTypeTest( "FLOAT", new MySQLParameter("value", MySqlDbType.Float, ParameterDirection.Input, 1.25e-5f), 1.25e-5f );
-                yield return new PreparedFieldTypeTest( "DOUBLE", new MySQLParameter("value", MySqlDbType.Double, ParameterDirection.Input, 345435.567894d), 345435.567894d );
-                yield return new PreparedFieldTypeTest( "BIT(2)", new MySQLParameter("value", MySqlDbType.Bit, ParameterDirection.Input, (ulong)1), ((ulong)1) );
+                yield return new PreparedFieldTypeTest("TINYINT", new MySQLParameter("value", MySQLDbType.Byte, ParameterDirection.Input, (sbyte)-77), (sbyte)-77);
+                yield return new PreparedFieldTypeTest( "TINYINT(1)", new MySQLParameter("value",MySQLDbType.Boolean,ParameterDirection.Input,true),  true );
+                yield return new PreparedFieldTypeTest( "TINYINT UNSIGNED", new MySQLParameter("value", MySQLDbType.Byte, ParameterDirection.Input, byte.MaxValue), byte.MaxValue );
+                yield return new PreparedFieldTypeTest( "SMALLINT", new MySQLParameter("value", MySQLDbType.Short, ParameterDirection.Input, short.MinValue), short.MinValue );
+                yield return new PreparedFieldTypeTest( "SMALLINT UNSIGNED", new MySQLParameter("value", MySQLDbType.Short, ParameterDirection.Input, ushort.MaxValue), ushort.MaxValue );
+                yield return new PreparedFieldTypeTest( "MEDIUMINT", new MySQLParameter("value", MySQLDbType.Int, ParameterDirection.Input, 16777215/2), 16777215/2 );
+                yield return new PreparedFieldTypeTest( "MEDIUMINT UNSIGNED", new MySQLParameter("value", MySQLDbType.Int, ParameterDirection.Input, (uint)16777215), (uint)16777215 );
+                yield return new PreparedFieldTypeTest( "INT", new MySQLParameter("value", MySQLDbType.Int, ParameterDirection.Input, int.MinValue), int.MinValue );
+                yield return new PreparedFieldTypeTest( "INT UNSIGNED", new MySQLParameter("value", MySQLDbType.Int, ParameterDirection.Input, uint.MaxValue), uint.MaxValue );
+                yield return new PreparedFieldTypeTest( "BIGINT", new MySQLParameter("value", MySQLDbType.BigInt, ParameterDirection.Input, long.MinValue), long.MinValue );
+                yield return new PreparedFieldTypeTest( "BIGINT UNSIGNED", new MySQLParameter("value", MySQLDbType.BigInt, ParameterDirection.Input, ulong.MaxValue), ulong.MaxValue );
+                yield return new PreparedFieldTypeTest( "DECIMAL(18,6)", new MySQLParameter("value", MySQLDbType.Decimal, ParameterDirection.Input, -345435.567894m), -345435.567894m );
+                yield return new PreparedFieldTypeTest( "FLOAT", new MySQLParameter("value", MySQLDbType.Float, ParameterDirection.Input, 1.25e-5f), 1.25e-5f );
+                yield return new PreparedFieldTypeTest( "DOUBLE", new MySQLParameter("value", MySQLDbType.Double, ParameterDirection.Input, 345435.567894d), 345435.567894d );
+                yield return new PreparedFieldTypeTest( "BIT(2)", new MySQLParameter("value", MySQLDbType.Bit, ParameterDirection.Input, (ulong)1), ((ulong)1) );
 
                 // time
-                yield return new PreparedFieldTypeTest( "DATE", new MySQLParameter("value", MySqlDbType.Date, ParameterDirection.Input, new DateTime(1, 1, 1)), new DateTime(1, 1, 1));
-                yield return new PreparedFieldTypeTest( "TIME", new MySQLParameter("value", MySqlDbType.Time, ParameterDirection.Input, new DateTime(1, 1, 1, 13, 40, 45)), new DateTime(1, 1, 1, 13, 40, 45) );
-                yield return new PreparedFieldTypeTest( "DATETIME", new MySQLParameter("value", MySqlDbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
-                yield return new PreparedFieldTypeTest( "TIMESTAMP", new MySQLParameter("value", MySqlDbType.TimeStamp, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
+                yield return new PreparedFieldTypeTest( "DATE", new MySQLParameter("value", MySQLDbType.Date, ParameterDirection.Input, new DateTime(1, 1, 1)), new DateTime(1, 1, 1));
+                yield return new PreparedFieldTypeTest( "TIME", new MySQLParameter("value", MySQLDbType.Time, ParameterDirection.Input, new DateTime(1, 1, 1, 13, 40, 45)), new DateTime(1, 1, 1, 13, 40, 45) );
+                yield return new PreparedFieldTypeTest( "DATETIME", new MySQLParameter("value", MySQLDbType.DateTime, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
+                yield return new PreparedFieldTypeTest( "TIMESTAMP", new MySQLParameter("value", MySQLDbType.TimeStamp, ParameterDirection.Input, new DateTime(2020, 12, 11, 13, 40, 45)), new DateTime(2020, 12, 11, 13, 40, 45) );
 
         
-                yield return new PreparedFieldTypeTest( "YEAR", new MySQLParameter("value", MySqlDbType.Year, ParameterDirection.Input, new DateTime(2020, 1, 1)), new DateTime(2020, 1, 1) );
+                yield return new PreparedFieldTypeTest( "YEAR", new MySQLParameter("value", MySQLDbType.Year, ParameterDirection.Input, new DateTime(2020, 1, 1)), new DateTime(2020, 1, 1) );
 
                 // varchars
-                yield return new PreparedFieldTypeTest( "VARCHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "CHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text");
-                yield return new PreparedFieldTypeTest( "TEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "TINYTEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "MEDIUMTEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "LONGTEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "BINARY(20)", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "VARBINARY(20)", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "VARCHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "CHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text");
+                yield return new PreparedFieldTypeTest( "TEXT CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "TINYTEXT CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "MEDIUMTEXT CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "LONGTEXT CHARACTER SET utf8", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "BINARY(20)", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
+                yield return new PreparedFieldTypeTest( "VARBINARY(20)", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "some text"), "some text" );
 
                 // enums & sets
-                yield return new PreparedFieldTypeTest( "ENUM('a','b','c') CHARACTER SET binary", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "a"), "a" );
-                yield return new PreparedFieldTypeTest( "SET('a', 'b', 'c', 'd')", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "d,a,d"), "a,d" );
+                yield return new PreparedFieldTypeTest( "ENUM('a','b','c') CHARACTER SET binary", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "a"), "a" );
+                yield return new PreparedFieldTypeTest( "SET('a', 'b', 'c', 'd')", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "d,a,d"), "a,d" );
 
                 // blobs
-                yield return new PreparedFieldTypeTest( "BLOB",  new MySQLParameter("value", MySqlDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf }) ;
-                yield return new PreparedFieldTypeTest( "TINYBLOB", new MySQLParameter("value", MySqlDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
-                yield return new PreparedFieldTypeTest( "MEDIUMBLOB", new MySQLParameter("value", MySqlDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
-                yield return new PreparedFieldTypeTest( "LONGBLOB", new MySQLParameter("value", MySqlDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
+                yield return new PreparedFieldTypeTest( "BLOB",  new MySQLParameter("value", MySQLDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf }) ;
+                yield return new PreparedFieldTypeTest( "TINYBLOB", new MySQLParameter("value", MySQLDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
+                yield return new PreparedFieldTypeTest( "MEDIUMBLOB", new MySQLParameter("value", MySQLDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
+                yield return new PreparedFieldTypeTest( "LONGBLOB", new MySQLParameter("value", MySQLDbType.Binary, ParameterDirection.Input, new byte[] { 0x01, 0xaf }), new byte[] { 0x01, 0xaf });
 
                 // geometry
                 //yield return new PreparedFieldTypeTest( "POINT", "POINT(1,1)", new MySqlPoint(1,1), );;
@@ -295,7 +295,7 @@ namespace MySqlDriverCs.Core.Tests
                 //yield return new PreparedFieldTypeTest( "GEOMETRYCOLLECTION", "ST_GeomCollFromText('GEOMETRYCOLLECTION(POINT(1 1),LINESTRING(0 0,1 1,2 2,3 3,4 4))')", new MySqlGeometryCollection(new MySqlPoint(1,1), new MySqlLineString(new MySqlPoint(0,0), new MySqlPoint(1,1), new MySqlPoint(2,2), new MySqlPoint(3,3), new MySqlPoint(4,4))), );;
 
                 // json
-                yield return new PreparedFieldTypeTest( "JSON", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "{\"key1\": \"value1\", \"key2\": \"value2\"}"), "{\"key1\": \"value1\", \"key2\": \"value2\"}" );
+                yield return new PreparedFieldTypeTest( "JSON", new MySQLParameter("value", MySQLDbType.String, ParameterDirection.Input, "{\"key1\": \"value1\", \"key2\": \"value2\"}"), "{\"key1\": \"value1\", \"key2\": \"value2\"}" );
             }
 
 
@@ -319,7 +319,7 @@ namespace MySqlDriverCs.Core.Tests
             using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, ?)", c))
             {
                 cmd3.UsePreparedStatement = true;
-                cmd3.Parameters.Add(new MySQLParameter("", MySqlDbType.Binary, ParameterDirection.Input, Encoding.UTF8.GetBytes("sure.")));
+                cmd3.Parameters.Add(new MySQLParameter("", MySQLDbType.Binary, ParameterDirection.Input, Encoding.UTF8.GetBytes("sure.")));
                 cmd3.ExecuteNonQuery();
             }
 
@@ -454,7 +454,7 @@ namespace MySqlDriverCs.Core.Tests
             using (var cmd3 = new MySQLCommand($@"INSERT INTO number_type_test ( id ,COL_VALUE)values(0, ?)", c))
             {
                 cmd3.UsePreparedStatement = true;
-                cmd3.Parameters.Add(new MySQLParameter("", MySqlDbType.Bit, ParameterDirection.Input, 1));
+                cmd3.Parameters.Add(new MySQLParameter("", MySQLDbType.Bit, ParameterDirection.Input, 1));
                 cmd3.ExecuteNonQuery();
             }
 
@@ -545,7 +545,7 @@ namespace MySqlDriverCs.Core.Tests
             using (var cmd = new MySQLCommand("select id, COL_VALUE from number_type_test where id=?", c))
             {
                 cmd.UsePreparedStatement = true;
-                var p = new MySQLParameter("id", MySqlDbType.Int);
+                var p = new MySQLParameter("id", MySQLDbType.Int);
                 p.Value = 0;
                 cmd.Parameters.Add(p);
 

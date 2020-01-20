@@ -1,6 +1,6 @@
 namespace MySQLDriverCS
 {
-    public interface IMySqlGeometryObject
+    public interface IMySQLGeometryObject
     {
     }
 }

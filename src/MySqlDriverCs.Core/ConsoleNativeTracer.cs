@@ -1,5 +1,4 @@
 using System;
-using MySqlDriverCs.Interop;
 using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS

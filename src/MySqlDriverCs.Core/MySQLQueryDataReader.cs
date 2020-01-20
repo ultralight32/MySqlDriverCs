@@ -47,7 +47,7 @@ namespace MySQLDriverCS
        
         // Update by Omar del Valle Rodríguez (omarvr72@yahoo.com.mx)
         // In order support CommandBehavior.CloseConnection
-        internal unsafe MySQLQueryDataReader(IntPtr resultPtr, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
+        internal  MySQLQueryDataReader(IntPtr resultPtr, MySQLConnection _connection, Statement _stmt, bool CloseConnection)
         {
 
             nativeResult = new NativeResult(resultPtr);
@@ -60,11 +60,11 @@ namespace MySQLDriverCS
             uint i; ulong j;
             uint num_fields = nativeResult.mysql_num_fields();
             ulong num_rows = nativeResult.mysql_num_rows();
-            List<MySqlField> fields = new List<MySqlField>();
+            List<QueryFieldDescription> fields = new List<QueryFieldDescription>();
             for (i = 0; i < num_fields; i++)
             {
 
-                IMySqlField field = new MYSQL_FIELD();
+                var field = new MYSQL_FIELD();
                 var ptr = nativeResult.mysql_fetch_field_direct(i);
                 Marshal.PtrToStructure(ptr, field);
 
@@ -72,7 +72,7 @@ namespace MySQLDriverCS
                 dt.Columns.Add(field.Name);
 
                 //Type ftype = MySqlField.MysqltoNetType(field);
-                var mySqlField = new MySqlField(field.Name, (enum_field_types)field.Type, field.MaxLength, field.Length, field.Flags);
+                var mySqlField = new QueryFieldDescription(field.Name, (enum_field_types)field.Type, field.MaxLength, field.Length, field.Flags);
                 if (mySqlField.FieldType != null)
                 {
                     dt.Columns[field.Name].DataType = mySqlField.FieldType;
@@ -92,7 +92,7 @@ namespace MySQLDriverCS
                 }
 
                 IntPtr myrow = nativeResult.mysql_fetch_row();
-                if (myrow.ToPointer() == null)
+                if (myrow==IntPtr.Zero)
                 {
                     throw new MySqlException(_connection.NativeConnection);
                 }
@@ -104,19 +104,19 @@ namespace MySQLDriverCS
 
                 for (i = 0; i < num_fields; i++)
                 {
-                    MySqlField mySqlField = fields[(int)i];
+                    QueryFieldDescription queryFieldDescription = fields[(int)i];
 
-                    IntPtr ptr = Marshal.ReadIntPtr(myrow, (int)i * sizeof(IntPtr));
+                    IntPtr ptr = Marshal.ReadIntPtr(myrow, (int)i * Marshal.SizeOf<IntPtr>());
 
                     if (ptr == IntPtr.Zero)
                     {
                         dr[(int)i] = Convert.DBNull;
                     }
-                    else if (mySqlField.FieldType == typeof(bool))
+                    else if (queryFieldDescription.FieldType == typeof(bool))
                     {
                         dr[(int)i] = GetValidString(ptr) != "0";
                     }
-                    else if (mySqlField.FieldType == typeof(byte[]))
+                    else if (queryFieldDescription.FieldType == typeof(byte[]))
                     {
                       
                         int length = (int) lengths[i];
@@ -126,73 +126,73 @@ namespace MySQLDriverCS
                         dr[(int) i] = val;
                        
                     }
-                    else if (mySqlField.FieldType == typeof(short))
+                    else if (queryFieldDescription.FieldType == typeof(short))
                     {
                         dr[(int) i] = Convert.ToInt16(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(ushort))
+                    else if (queryFieldDescription.FieldType == typeof(ushort))
                     {
                         dr[(int) i] = Convert.ToUInt16(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(byte))
+                    else if (queryFieldDescription.FieldType == typeof(byte))
                     {
                         dr[(int) i] = Convert.ToByte(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(sbyte))
+                    else if (queryFieldDescription.FieldType == typeof(sbyte))
                     {
                         dr[(int) i] = Convert.ToSByte(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(decimal))
+                    else if (queryFieldDescription.FieldType == typeof(decimal))
                     {
                         dr[(int) i] = Convert.ToDecimal(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
-                    else if (mySqlField.FieldType == typeof(double))
+                    else if (queryFieldDescription.FieldType == typeof(double))
                     {
                         dr[(int) i] = Convert.ToDouble(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
-                    else if (mySqlField.FieldType == typeof(float))
+                    else if (queryFieldDescription.FieldType == typeof(float))
                     {
                         dr[(int) i] = Convert.ToSingle(GetValidString(ptr), CultureInfo.InvariantCulture.NumberFormat);
                     }
-                    else if (mySqlField.FieldType == typeof(int))
+                    else if (queryFieldDescription.FieldType == typeof(int))
                     {
                         dr[(int) i] = Convert.ToInt32(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(uint))
+                    else if (queryFieldDescription.FieldType == typeof(uint))
                     {
                         dr[(int) i] = Convert.ToUInt32(GetValidString(ptr));
                     }
-                    else if (mySqlField.FieldType == typeof(long))
+                    else if (queryFieldDescription.FieldType == typeof(long))
                     {
                         dr[(int)i] = Convert.ToInt64(GetValidString(ptr));
                         
                     }
-                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_GEOMETRY)
+                    else if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_GEOMETRY)
                     {
                         // TODO: returns empty string
                         string val = GetValidString(ptr);
                         dr[(int)i] = val;
                     }
-                    else if (mySqlField.FieldType == typeof(ulong))
+                    else if (queryFieldDescription.FieldType == typeof(ulong))
                     {
-                        if (mySqlField.Type == enum_field_types.MYSQL_TYPE_BIT)
+                        if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_BIT)
                         {
 
                             {
                                 int byteCount;
-                                if (mySqlField.Length <= 8)
+                                if (queryFieldDescription.Length <= 8)
                                     byteCount = 1;
-                                else if (mySqlField.Length <= 16)
+                                else if (queryFieldDescription.Length <= 16)
                                     byteCount = 2;
-                                else if (mySqlField.Length <= 24)
+                                else if (queryFieldDescription.Length <= 24)
                                     byteCount = 3;
-                                else if (mySqlField.Length <= 32)
+                                else if (queryFieldDescription.Length <= 32)
                                     byteCount = 4;
-                                else if (mySqlField.Length <= 32 + 8)
+                                else if (queryFieldDescription.Length <= 32 + 8)
                                     byteCount = 5;
-                                else if (mySqlField.Length <= 32 + 16)
+                                else if (queryFieldDescription.Length <= 32 + 16)
                                     byteCount = 6;
-                                else if (mySqlField.Length <= 32 + 24)
+                                else if (queryFieldDescription.Length <= 32 + 24)
                                     byteCount = 7;
                                 else
                                     byteCount = 8;
@@ -217,29 +217,29 @@ namespace MySQLDriverCS
                             }
                         }
                     }
-                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_DATE || mySqlField.Type == enum_field_types.MYSQL_TYPE_DATE)
+                    else if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_DATE || queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_DATE)
                     {
                         string val = GetValidString(ptr);
                         dr[(int)i] = DateTime.ParseExact(val, "yyyy-MM-dd", CultureInfo.InvariantCulture.DateTimeFormat);
                     }
-                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_DATETIME || mySqlField.Type == enum_field_types.MYSQL_TYPE_DATETIME2
-                                                                                     || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP
-                                                                                     || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2)
+                    else if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_DATETIME || queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_DATETIME2
+                                                                                     || queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP
+                                                                                     || queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2)
                     {
                         string val = GetValidString(ptr);
                         dr[(int)i] = DateTime.ParseExact(val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
                     }
-                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME || mySqlField.Type == enum_field_types.MYSQL_TYPE_TIME2)
+                    else if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_TIME || queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_TIME2)
                     {
                         string val = GetValidString(ptr);
                         dr[(int)i] = DateTime.ParseExact("0001-01-01 " + val, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture.DateTimeFormat);
                     }
-                    else if (mySqlField.Type == enum_field_types.MYSQL_TYPE_YEAR)
+                    else if (queryFieldDescription.Type == enum_field_types.MYSQL_TYPE_YEAR)
                     {
                         string val = GetValidString(ptr);
                         dr[(int)i] = DateTime.ParseExact(val, "yyyy", CultureInfo.InvariantCulture.DateTimeFormat);
                     }
-                    else if (mySqlField.FieldType == typeof(DateTime))
+                    else if (queryFieldDescription.FieldType == typeof(DateTime))
                     {
                         string val = GetValidString(ptr);
                         if (val == null)
@@ -266,7 +266,7 @@ namespace MySQLDriverCS
                             }
                         }
                     }
-                    else if (mySqlField.FieldType == typeof(string))
+                    else if (queryFieldDescription.FieldType == typeof(string))
                     {
                         string val = GetValidString(ptr);
                         if (val == null)

@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace MySQLDriverCS
 {
-    public class MySqlPoint : IMySqlGeometryObject, IEquatable<MySqlPoint>, IReadOnlyList<double>
+    public class MySQLPoint : IMySQLGeometryObject, IEquatable<MySQLPoint>, IReadOnlyList<double>
     {
         private readonly double[] _coordinates;
 
-        public MySqlPoint(double x, double y)
+        public MySQLPoint(double x, double y)
         {
             var coordinates = new double[]{x,y};
             if (coordinates == null) throw new ArgumentNullException(nameof(coordinates));
@@ -20,17 +20,17 @@ namespace MySQLDriverCS
         public int Count => _coordinates.Length;
         public double this[int index] => _coordinates[index];
 
-        public static bool operator !=(MySqlPoint left, MySqlPoint right)
+        public static bool operator !=(MySQLPoint left, MySQLPoint right)
         {
             return !Equals(left, right);
         }
 
-        public static bool operator ==(MySqlPoint left, MySqlPoint right)
+        public static bool operator ==(MySQLPoint left, MySQLPoint right)
         {
             return Equals(left, right);
         }
 
-        public bool Equals(MySqlPoint other)
+        public bool Equals(MySQLPoint other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -42,7 +42,7 @@ namespace MySQLDriverCS
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((MySqlPoint)obj);
+            return Equals((MySQLPoint)obj);
         }
 
         public IEnumerator<double> GetEnumerator()

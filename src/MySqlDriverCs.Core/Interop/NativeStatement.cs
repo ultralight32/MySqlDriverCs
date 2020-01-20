@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using MySqlDriverCs.Interop;
+using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS.Interop
 {

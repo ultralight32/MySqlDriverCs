@@ -160,7 +160,7 @@ namespace MySQLDriverCS
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
-                IMySqlField ft = new MYSQL_FIELD();
+                var ft = new MYSQL_FIELD();
                 ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;
                 newbind[0].InitForBind(ft, _stmt._nativeConnection);

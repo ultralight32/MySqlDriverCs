@@ -3,7 +3,7 @@ namespace MySQLDriverCS
     /// <summary>
     /// Variable types
     /// </summary>
-    public enum MySqlDbType
+    public enum MySQLDbType
     {
         /// <summary>
         /// Int 64

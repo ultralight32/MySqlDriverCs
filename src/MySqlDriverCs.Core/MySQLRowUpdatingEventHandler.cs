@@ -1,4 +1,4 @@
-namespace MySqlDriverCs
+namespace MySQLDriverCS
 {
     /// <summary>
     /// Updating event handler

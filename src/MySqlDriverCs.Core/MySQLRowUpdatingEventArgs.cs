@@ -2,7 +2,7 @@ using System.Data;
 using System.Data.Common;
 using MySQLDriverCS;
 
-namespace MySqlDriverCs
+namespace MySQLDriverCS
 {
     /// <summary>
     /// Updating event arguments

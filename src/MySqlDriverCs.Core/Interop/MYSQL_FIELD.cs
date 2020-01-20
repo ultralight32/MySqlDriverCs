@@ -6,7 +6,7 @@ namespace MySQLDriverCS.Interop
     /// <inheritdoc />
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public class MYSQL_FIELD : IMySqlField
+    public class MYSQL_FIELD 
     {
         /// <summary>
         /// The name of the field. If the field was given an alias with an AS  clause, the value of name is the alias.
