@@ -47,9 +47,10 @@
 
 #endregion LICENSE
 
-using MySQLDriverCS.Interop;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 
 namespace MySQLDriverCS
 {
@@ -59,8 +60,8 @@ namespace MySQLDriverCS
     public class MySQLCommand : IDbCommand
     {
         private MySQLConnection _connection = null;
-        internal MySQLTransaction _Transaction = null;
-        internal Statement _statement;
+        private MySQLTransaction _transaction = null;
+
 
         /// <summary>Initializes a new instance of the MySQLCommand class.</summary>
         public MySQLCommand()
@@ -90,7 +91,7 @@ namespace MySQLDriverCS
         /// <param name="transaction"></param>
         public MySQLCommand(string cmdText, MySQLConnection connection, MySQLTransaction transaction) : this(cmdText, connection)
         {
-            _Transaction = transaction;
+            _transaction = transaction;
         }
 
         /// <summary>Initializes a new instance of the MySQLCommand class with the text of the query, a MySQLConnection, and the IDbTransaction.
@@ -142,7 +143,7 @@ namespace MySQLDriverCS
         private void SetConnection(MySQLConnection value)
         {
             _connection = value;
-            if (_statement != null) _statement.connection = _connection;
+
         }
 
         /// <summary>
@@ -154,8 +155,8 @@ namespace MySQLDriverCS
 
         IDbTransaction IDbCommand.Transaction
         {
-            get => _Transaction;
-            set => _Transaction = (MySQLTransaction)value;
+            get => _transaction;
+            set => _transaction = (MySQLTransaction)value;
         }
 
         /// <summary>
@@ -163,8 +164,8 @@ namespace MySQLDriverCS
         /// </summary>
         public MySQLTransaction DbTransaction
         {
-            get => _Transaction;
-            set => _Transaction = value;
+            get => _transaction;
+            set => _transaction = value;
         }
 
         /// <summary>
@@ -177,11 +178,7 @@ namespace MySQLDriverCS
 		/// </summary>
 		public void Cancel()
         {
-            if (_statement != null)
-                lock (_statement)
-                {
-                    _statement.TryToCancel = true;
-                }
+
         }
 
         /// <summary>
@@ -198,48 +195,6 @@ namespace MySQLDriverCS
         public MySQLParameter CreateParameter()
         {
             return new MySQLParameter();
-        }
-
-        /// <summary>
-        /// A server-side cursor allows a result set to be generated on the server side, but not transferred to the client
-        /// except for those rows that the client requests. For example, if a client executes a query but is only
-        /// interested in the first row, the remaining rows are not transferred.
-        /// In MySQL, a server-side cursor is materialized into a temporary table.
-        /// Initially, this is a MEMORY table, but is converted to a MyISAM table if its size reaches the value of the
-        /// max_heap_table_size system variable. One limitation of the implementation is that for a large result set,
-        /// retrieving its rows through a cursor might be slow.
-        /// Cursors are read-only; you cannot use a cursor to update rows.
-        /// When ServerCursor is true it sets UsePreparedStatement true automatically.
-        /// </summary>
-        public bool ServerCursor
-        {
-            set
-            {
-                if (value)
-                {
-                    if (!UsePreparedStatement)
-                    {
-                        UsePreparedStatement = true;
-                    }
-                    Stmt.CursorType = (uint)CursorTypes.CURSOR_TYPE_READ_ONLY;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Number of rows to fetch from server at a time when using a cursor.
-        /// Can be in the range from 1 to the maximum value of UInt32.
-        /// </summary>
-        public uint FetchSize
-        {
-            set
-            {
-                if (!UsePreparedStatement)
-                {
-                    UsePreparedStatement = true;
-                }
-                Stmt.FetchSize = value;
-            }
         }
 
         /// <summary>
@@ -262,21 +217,17 @@ namespace MySQLDriverCS
         /// <remarks>Use parameter markers ('?') for PreparedStatements instead of named parameters</remarks>
         public bool UsePreparedStatement { get; set; } = false;
 
-        private Statement Stmt
+        private Statement CreateStatement()
         {
-            get
-            {
-                if (_statement == null)
-                {
-                    if (_connection == null || _connection.State != ConnectionState.Open)
-                    {
-                        throw new MySqlException("Connection must be valid and open.");
-                    }
 
-                    _statement = (UsePreparedStatement||Parameters.Count>0) ? (Statement)new PreparedStatement(_connection, CommandText) : new SqlInjectedParametersStatement(_connection, CommandText);
-                }
-                return _statement;
+            if (_connection == null || _connection.State != ConnectionState.Open)
+            {
+                throw new MySqlException("Connection must be valid and open.");
             }
+
+            return (UsePreparedStatement || Parameters.Count > 0) ? (Statement)new PreparedStatement(_connection, CommandText) : new SqlInjectedParametersStatement(_connection, CommandText);
+
+
         }
 
         /// <summary>
@@ -285,15 +236,14 @@ namespace MySQLDriverCS
         /// <returns></returns>
         public int ExecuteNonQuery()
         {
-            if (_connection == null || _connection.State != ConnectionState.Open)
+            using (var statement = CreateStatement())
             {
-                throw new MySqlException("Connection must be valid and open.");
+                statement.Parameters = Parameters;
+                if (CommandType == CommandType.StoredProcedure)
+                    return statement.ExecuteCall();
+                else
+                    return statement.ExecuteNonQuery();
             }
-            Stmt.Parameters = Parameters;
-            if (CommandType == CommandType.StoredProcedure)
-                return Stmt.ExecuteCall();
-            else
-                return Stmt.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -311,14 +261,16 @@ namespace MySQLDriverCS
         /// Executes the CommandText against the Connection and builds an IDataReader.
         /// </summary>
         /// <remarks>Use <c>ExecuteReaderEx</c> to avoid conversions.</remarks>
-        /// <param name="CloseConnection">Equal to true by ExecuteReader(CommandBehavior behavior)</param>
+        /// <param name="closeConnection">Equal to true by ExecuteReader(CommandBehavior behavior)</param>
         /// <returns>IDataReader</returns>
-        public IDataReader ExecuteReader(bool CloseConnection)
+        public IDataReader ExecuteReader(bool closeConnection)
         {
-            if ((_connection == null) || (_connection.State == ConnectionState.Closed)) { throw new MySqlException("Connection must be open"); }
-            Stmt.Parameters = Parameters;
-            return Stmt.ExecuteReader(CloseConnection);
+            var statement = CreateStatement();
+            statement.Parameters = Parameters;
+            _pendingDisposeStatements.Add(statement);
+            return statement.ExecuteReader(closeConnection);
         }
+        List<Statement> _pendingDisposeStatements= new List<Statement>();
 
         /// <summary>
         /// Overloaded. Executes the CommandText against the Connection and builds an IDataReader.
@@ -353,8 +305,12 @@ namespace MySQLDriverCS
         /// </summary>
         public int ExecuteCall()
         {
-            Stmt.Parameters = Parameters;
-            Stmt.ExecuteCall();
+            using (var statement = CreateStatement())
+            {
+                statement.Parameters = Parameters;
+                statement.ExecuteCall();
+            }
+
             return 0;
         }
 
@@ -372,7 +328,7 @@ namespace MySQLDriverCS
                 throw new MySqlException("Invalid query.");
             }
 
-            Stmt.Prepare();
+            //GetStmt().Prepare();
         }
 
         private bool _disposed = false;
@@ -385,8 +341,14 @@ namespace MySQLDriverCS
         public void Dispose()
         {
             if (_disposed) return;
-            Stmt.Dispose();
-            _Transaction = null;
+
+            while (_pendingDisposeStatements.Any())
+            {
+                _pendingDisposeStatements[0].Dispose();
+                _pendingDisposeStatements.RemoveAt(0);
+            }
+      
+            _transaction = null;
             _connection = null;
             _disposed = true;
         }

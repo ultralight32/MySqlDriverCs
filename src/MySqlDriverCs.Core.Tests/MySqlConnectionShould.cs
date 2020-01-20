@@ -270,7 +270,7 @@ namespace MySqlDriverCs.Core.Tests
 
                 // varchars
                 yield return new PreparedFieldTypeTest( "VARCHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
-                yield return new PreparedFieldTypeTest( "CHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" + new string(' ',20- "some text".Length));
+                yield return new PreparedFieldTypeTest( "CHAR(20) CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text");
                 yield return new PreparedFieldTypeTest( "TEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
                 yield return new PreparedFieldTypeTest( "TINYTEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );
                 yield return new PreparedFieldTypeTest( "MEDIUMTEXT CHARACTER SET utf8", new MySQLParameter("value", MySqlDbType.String, ParameterDirection.Input, "some text"), "some text" );

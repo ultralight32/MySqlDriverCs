@@ -43,7 +43,7 @@ namespace MySQLDriverCS.Interop
         /// For output, it is a pointer to the buffer in which to return a result set column value. Buffer to get/put data
         /// </summary>
         /// <remarks> void		*buffer;</remarks>
-        public IntPtr buffer;
+        private IntPtr buffer;
 
         /// <summary>
         /// set this if you want to track data truncations happened during fetc
@@ -75,7 +75,7 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// output buffer length, must be set when fetching str/binary
         /// </summary>
-        public uint buffer_length; //   unsigned long buffer_length;
+        private uint buffer_length; //   unsigned long buffer_length;
 
         /// <summary>
         /// offset position for char/binary fetch
@@ -158,11 +158,9 @@ namespace MySQLDriverCS.Interop
         /// <summary>
         /// Inits structure for binding.
         /// </summary>
-        /// <param name="fieldMetadata"></param>
         public void InitForBind(IMySqlField fieldMetadata, NativeConnection nativeConnection)
         {
             buffer_type = fieldMetadata.Type;
-            Type type = MySQLUtils.MySQLToNetType(buffer_type);
             if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATE || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DATETIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIME2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TIMESTAMP2 || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDATE)
             {
                 SetBuffer(new byte[Marshal.SizeOf<MYSQL_TIME>()]);
@@ -171,7 +169,7 @@ namespace MySQLDriverCS.Interop
             {
                 SetBuffer(new byte[sizeof(byte)]);
             }
-            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_SHORT)
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_SHORT|| fieldMetadata.Type==enum_field_types.MYSQL_TYPE_YEAR)
             {
                 SetBuffer(new byte[sizeof(ushort)]);
             }
@@ -183,31 +181,26 @@ namespace MySQLDriverCS.Interop
             {
                 SetBuffer(new byte[sizeof(ulong)]);
             }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DOUBLE)
+            {
+                SetBuffer(new byte[sizeof(double)]);
+            }
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_FLOAT)
+            {
+                SetBuffer(new byte[sizeof(float)]);
+            }
             else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_JSON || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_TINY_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_LONG_BLOB || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_MEDIUM_BLOB)
             {
-                var maxLen = 1024;
-                buffer = Marshal.AllocHGlobal((int)maxLen);
-                buffer_length = (uint)maxLen;
+                SetBuffer(new byte[1024]);
             }
-            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VARCHAR || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_STRING || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VAR_STRING)
+            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VARCHAR || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_STRING || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_VAR_STRING|| fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DECIMAL || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDECIMAL)
             {
-                buffer_length = fieldMetadata.Length * nativeConnection.mysql_get_character_set_info().mbmaxlen; // reserve the max number of chars for this characterset
-                buffer = Marshal.StringToHGlobalAnsi(new string(' ', (int)buffer_length));
-            }
-            else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_DECIMAL || fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NEWDECIMAL)
-            {
-                var maxDecimalLengthString = 65 + 2; // 65 digits, 1 dot, 1 sign
-                buffer_length = (uint)(maxDecimalLengthString * nativeConnection.mysql_get_character_set_info().mbmaxlen); // reserve the max number of chars for this characterset
-                buffer = Marshal.StringToHGlobalAnsi(new string(' ', (int)buffer_length));
-            }
-            else if (type == typeof(sbyte[]) || type == typeof(byte[]))
-            {
-                buffer = Marshal.AllocHGlobal((int)fieldMetadata.MaxLength);
-                buffer_length = (uint)fieldMetadata.MaxLength;
+                // set buffer including ending null
+                SetBuffer(new byte[(fieldMetadata.Length+1) * nativeConnection.mysql_get_character_set_info().mbmaxlen]);
             }
             else
             {
-                buffer = Marshal.AllocHGlobal(Marshal.SizeOf(type) + 0);
+                throw new NotSupportedException();
             }
             length = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
             is_null = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(sbyte)));
@@ -219,7 +212,7 @@ namespace MySQLDriverCS.Interop
         {
             if (is_null != IntPtr.Zero)
             {
-                Marshal.FreeHGlobal(buffer);
+                Marshal.FreeHGlobal(is_null);
                 is_null = IntPtr.Zero;
             }
         }
@@ -287,7 +280,7 @@ namespace MySQLDriverCS.Interop
                         if (x == null)
                             return DBNull.Value;
 
-                        if ((fieldMetadata.Flags & MySqlFieldFlags.BINARY_FLAG) != 0)
+                        if ((fieldMetadata.Flags & MySqlFieldFlags.BINARY_FLAG) != 0 && buffer_type!= enum_field_types.MYSQL_TYPE_JSON)
                             return x;
 
                         var encoding = CollationEntries.TryGetEncoding((int)fieldMetadata.charsetnr) ?? Encoding.UTF8;
@@ -350,9 +343,13 @@ namespace MySQLDriverCS.Interop
                 case enum_field_types.MYSQL_TYPE_ENUM:
                     {
                         string string_data = Marshal.PtrToStringAnsi(buffer, (int)GetLength());
+
+                        // if trailing null is added read up to this null
                         int index = string_data.IndexOf('\0');
                         if (index >= 0)
                             string_data = string_data.Substring(0, index);
+
+                        // pad
                         if (buffer_type == enum_field_types.MYSQL_TYPE_STRING && string_data.Length < buffer_length && (fieldMetadata.Flags & MySqlFieldFlags.ZEROFILL_FLAG) != 0)
                         {
                             string_data = string_data.PadRight((int)buffer_length);
@@ -522,7 +519,6 @@ namespace MySQLDriverCS.Interop
             {
                 length = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(uint)));
             }
-
             Marshal.WriteInt32(length, (int)value);
         }
 
@@ -553,6 +549,7 @@ namespace MySQLDriverCS.Interop
         /// </summary>
         public bool GetIsNull()
         {
+            if (this.is_null == IntPtr.Zero) return false;
             return (sbyte)Marshal.ReadByte(this.is_null) == 1;
         }
 
@@ -574,7 +571,6 @@ namespace MySQLDriverCS.Interop
             if (buffer != IntPtr.Zero)
             {
                 Marshal.FreeHGlobal(buffer);
-                buffer = IntPtr.Zero;
             }
 
             buffer_length = 0;

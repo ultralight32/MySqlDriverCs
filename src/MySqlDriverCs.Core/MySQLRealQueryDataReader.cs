@@ -208,7 +208,7 @@ namespace MySQLDriverCS
         public double GetDouble(int i) { return (double)this[i]; }
 
         /// <inheritdoc />
-        public Type GetFieldType(int i) { return MySQLUtils.MySQLToNetType(_fields[i].Type); }
+        public Type GetFieldType(int i) { return this[i]?.GetType(); }
 
         /// <inheritdoc />
         public float GetFloat(int i) { return (float)this[i]; }

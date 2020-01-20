@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace MySQLDriverCS.Interop
@@ -25,6 +27,24 @@ namespace MySQLDriverCS.Interop
         /// Time type
         /// </summary>
         public enum_mysql_timestamp_type time_type;
+
+        public byte[] ToByteArray()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var bw = new BinaryWriter(ms);
+                bw.Write(year);
+                bw.Write(month);
+                bw.Write(day);
+                bw.Write(hour);
+                bw.Write(minute);
+                bw.Write(second);
+                bw.Write(second_part);
+                bw.Write(neg);
+                bw.Write((int)time_type);
+                return ms.ToArray();
+            }
+        }
     }
 
     public enum enum_mysql_timestamp_type: int

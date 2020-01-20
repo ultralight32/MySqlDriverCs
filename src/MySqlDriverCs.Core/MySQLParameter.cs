@@ -532,28 +532,40 @@ namespace MySQLDriverCS
 
         private byte[] ToMysqlTimeBytes(DateTime datetime, enum_mysql_timestamp_type timeType)
         {
-            return StructToBytes(new MYSQL_TIME
+            //return StructToBytes(new MYSQL_TIME
+            //{
+            //    year = (uint) datetime.Year,
+            //    month = (uint) datetime.Month,
+            //    day = (uint) datetime.Day,
+            //    hour = (uint) datetime.Hour,
+            //    minute = (uint) datetime.Minute,
+            //    second = (uint) datetime.Second,
+            //    second_part = (uint) (datetime.Millisecond * 1000),
+            //    time_type = timeType
+            //});
+
+            return new MYSQL_TIME
             {
-                year = (uint) datetime.Year,
-                month = (uint) datetime.Month,
-                day = (uint) datetime.Day,
-                hour = (uint) datetime.Hour,
-                minute = (uint) datetime.Minute,
-                second = (uint) datetime.Second,
-                second_part = (uint) (datetime.Millisecond * 1000),
+                year = (uint)datetime.Year,
+                month = (uint)datetime.Month,
+                day = (uint)datetime.Day,
+                hour = (uint)datetime.Hour,
+                minute = (uint)datetime.Minute,
+                second = (uint)datetime.Second,
+                second_part = (uint)(datetime.Millisecond * 1000),
                 time_type = timeType
-            });
+            }.ToByteArray();
         }
 
-        private static byte[] StructToBytes(object str)
-        {
-            int size = Marshal.SizeOf(str);
-            byte[] arr = new byte[size];
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(str, ptr, true);
-            Marshal.Copy(ptr, arr, 0, size);
-            Marshal.FreeHGlobal(ptr);
-            return arr;
-        }
+        //private static byte[] StructToBytes(object str)
+        //{
+        //    int size = Marshal.SizeOf(str);
+        //    byte[] arr = new byte[size];
+        //    IntPtr ptr = Marshal.AllocHGlobal(size);
+        //    Marshal.StructureToPtr(str, ptr, false);
+        //    Marshal.Copy(ptr, arr, 0, size);
+        //    Marshal.FreeHGlobal(ptr);
+        //    return arr;
+        //}
     }
 }
