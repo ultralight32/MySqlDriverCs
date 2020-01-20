@@ -29,8 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Globalization;
 
 namespace MySQLDriverCS
 {
@@ -72,52 +70,18 @@ namespace MySQLDriverCS
 
     public sealed class MySQLParameterCollection : IDataParameterCollection
     {
-        private readonly List<MySQLParameter> m_List = new List<MySQLParameter>();
-        private bool m_sorted;
-        private ArrayList m_sortedList;
+        private readonly List<MySQLParameter> _list = new List<MySQLParameter>();
 
-        public int Count
-        {
-            get
-            {
-                if (m_List == null)
-                {
-                    return 0;
-                }
-
-                return m_List.Count;
-            }
-        }
+        public int Count => _list.Count;
 
         /// <inheritdoc />
-        public bool IsFixedSize => ((IList)m_List).IsFixedSize;
+        public bool IsFixedSize => ((IList)_list).IsFixedSize;
 
         /// <inheritdoc />
-        public bool IsReadOnly => ((IList)m_List).IsReadOnly;
+        public bool IsReadOnly => ((IList)_list).IsReadOnly;
 
         /// <inheritdoc />
-        public bool IsSynchronized => ((IList)m_List).IsSynchronized;
-
-        /// <summary>
-        /// Return a sorted list that is a shadow copy of the original elements, using the MySQLParameter's comparer.
-        /// </summary>
-        public ArrayList SortedList
-        {
-            get
-            {
-                if (!m_sorted)
-                {
-                    m_sortedList = new ArrayList();
-                    foreach (MySQLParameter p in this)
-                    {
-                        m_sortedList.Add(p);
-                    }
-                    m_sortedList.Sort(new MySQLParameterComparer());
-                    m_sorted = true;
-                }
-                return m_sortedList;
-            }
-        }
+        public bool IsSynchronized => ((IList)_list).IsSynchronized;
 
         public object SyncRoot { get; } = new object();
 
@@ -126,44 +90,29 @@ namespace MySQLDriverCS
         /// </summary>
         public MySQLParameter this[string index]
         {
-            get => (MySQLParameter)GetParameter(index);
+            get => GetParameter(index);
             set => SetParameter(index, value);
         }
 
         /// <inheritdoc />
         object IDataParameterCollection.this[string index]
         {
-            get => (MySQLParameter)GetParameter(index);
+            get => GetParameter(index);
             set => SetParameter(index, (MySQLParameter)value);
         }
 
         public MySQLParameter this[int index]
         {
-            get => (MySQLParameter)m_List[index];
+            get => _list[index];
             set => SetParameter(index, value);
         }
 
         /// <inheritdoc />
         object IList.this[int index]
         {
-            get => (MySQLParameter)m_List[index];
+            get => _list[index];
             set => SetParameter(index, (MySQLParameter)value);
         }
-
-        /// <summary>
-		/// Adds the specified MySQLParameter object to the MySQLParameterCollection.
-		/// </summary>
-		/// <param name="value">The MySQLParameter to add to the collection.</param>
-		/// <returns>The index in the collection of the new MySQLParameter object.</returns>
-        private int AddAndReturnIndex(MySQLParameter value)
-        {
-            if (value.ParameterName == null) throw new ArgumentException("parameter must be named");
- 
-            m_List.Add(value);
-            return m_List.Count - 1;
-
-        }
-
 
         /// <summary>
         /// Adds the specified MySQLParameter object to the MySQLParameterCollection.
@@ -172,31 +121,29 @@ namespace MySQLDriverCS
         /// <returns>The MySQLParameter object.</returns>
         public MySQLParameter Add(MySQLParameter value)
         {
-            return m_List[AddAndReturnIndex(value)];
+            return _list[AddAndReturnIndex(value)];
         }
 
         /// <inheritdoc />
         public int Add(object value)
         {
-            return AddAndReturnIndex((MySQLParameter)value);
-        }
-
-        /// <inheritdoc />he new MySQLParameter object.</returns>
-        public int Add(string parameterName, DbType type)
-        {
-            return AddAndReturnIndex(new MySQLParameter(parameterName, type));
+            if (!(value is MySQLParameter v))
+                throw new ArgumentException("value must be " + nameof(MySQLParameter));
+            return AddAndReturnIndex(v);
         }
 
         /// <inheritdoc />
         public void Clear()
         {
-            m_List.Clear();
+            _list.Clear();
         }
 
         /// <inheritdoc />
         public bool Contains(object value)
         {
-            return -1 != IndexOf(value);
+            if (!(value is MySQLParameter v))
+                throw new ArgumentException("value must be " + nameof(MySQLParameter));
+            return -1 != IndexOf(v);
         }
 
         /// <inheritdoc />
@@ -208,26 +155,25 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public void CopyTo(Array array, int index)
         {
-            m_List.CopyTo((MySQLParameter[])array, index);
+            _list.CopyTo((MySQLParameter[])array, index);
         }
 
         /// <inheritdoc />
         public IEnumerator GetEnumerator()
         {
-            return m_List.GetEnumerator();
+            return _list.GetEnumerator();
         }
 
         /// <inheritdoc />
         public int IndexOf(object value)
         {
-            if (value != null)
+            if (!(value is MySQLParameter v))
+                throw new ArgumentException("value must be " + nameof(MySQLParameter));
+            for (int idx = 0; idx < _list.Count; idx++)
             {
-                for (int idx = 0; idx < m_List.Count; idx++)
+                if (v == _list[idx])
                 {
-                    if (value == m_List[idx])
-                    {
-                        return idx;
-                    }
+                    return idx;
                 }
             }
 
@@ -237,23 +183,27 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public int IndexOf(string parameterName)
         {
-            return IndexOf(m_List, parameterName);
+            return _list.FindIndex(x => x.ParameterName == parameterName);
         }
 
         /// <inheritdoc />
         public void Insert(int index, object value)
         {
-            m_List.Insert(index, (MySQLParameter)value);
+            if (!(value is MySQLParameter v))
+                throw new ArgumentException("value must be " + nameof(MySQLParameter));
+            _list.Insert(index, v);
         }
 
         /// <inheritdoc />
         public void Remove(object value)
         {
-            int index = IndexOf(value);
+            if (!(value is MySQLParameter v))
+                throw new ArgumentException("value must be " + nameof(MySQLParameter));
+            int index = IndexOf(v);
 
             if (index < 0)
             {
-                throw new InvalidOperationException($"Can't find parameter {value.ToString()}");
+                throw new InvalidOperationException($"Can't find parameter {v}");
             }
 
             RemoveAt(index);
@@ -262,7 +212,7 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public void RemoveAt(int index)
         {
-            m_List.RemoveAt(index);
+            _list.RemoveAt(index);
         }
 
         /// <inheritdoc />
@@ -271,46 +221,18 @@ namespace MySQLDriverCS
             RemoveAt(IndexOf(parameterName));
         }
 
-        internal static int DstCompare(string strA, string strB)
+        /// <summary>
+		/// Adds the specified MySQLParameter object to the MySQLParameterCollection.
+		/// </summary>
+		/// <param name="value">The MySQLParameter to add to the collection.</param>
+		/// <returns>The index in the collection of the new MySQLParameter object.</returns>
+        private int AddAndReturnIndex(MySQLParameter value)
         {
-            return CultureInfo.CurrentCulture.CompareInfo.Compare(strA, strB, CompareOptions.IgnoreWidth | CompareOptions.IgnoreKanaType | CompareOptions.IgnoreCase);
-        }
+            if (value.ParameterName == null) throw new ArgumentException("parameter must be named");
 
-        internal static int SrcCompare(string strA, string strB)
-        {
-            if (strA != strB)
-            {
-                return 1;
-            }
-            return 0;
+            _list.Add(value);
+            return _list.Count - 1;
         }
-
-        private static int IndexOf(IEnumerable items, string parameterName)
-        {
-            if (items != null)
-            {
-                int num1 = 0;
-                foreach (MySQLParameter parameter2 in items)
-                {
-                    if (SrcCompare(parameterName, parameter2.ParameterName) == 0)
-                    {
-                        return num1;
-                    }
-                    num1++;
-                }
-                num1 = 0;
-                foreach (MySQLParameter parameter1 in items)
-                {
-                    if (DstCompare(parameterName, parameter1.ParameterName) == 0)
-                    {
-                        return num1;
-                    }
-                    num1++;
-                }
-            }
-            return -1;
-        }
-
         private MySQLParameter GetParameter(string parameterName)
         {
             int num1 = IndexOf(parameterName);
@@ -320,7 +242,7 @@ namespace MySQLDriverCS
                 throw new InvalidOperationException($"Can't find parameter {parameterName}");
             }
 
-            return m_List[num1];
+            return _list[num1];
         }
 
         private void SetParameter(string parameterName, MySQLParameter value)
@@ -337,8 +259,9 @@ namespace MySQLDriverCS
 
         private void SetParameter(int index, MySQLParameter value)
         {
-            m_List[index] = (MySQLParameter)value;
+            _list[index] = value;
         }
+
         // AddSort Method
     }
 }

@@ -37,16 +37,16 @@
     <Compile Update="MySQLConnectionString.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MySQLDataAdapter.cs">
+    <Compile Update="DataAdapter\MySQLDataAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="MySQLRealQueryDataReader.cs">
+    <Compile Update="BindVariables\MySQLRealQueryDataReader.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MySQLDeleteCommand.cs">
+    <Compile Update="DataAdapter\MySQLDeleteCommand.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MySQLInsertCommand.cs">
+    <Compile Update="DataAdapter\MySQLInsertCommand.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLParameter.cs">
@@ -55,13 +55,13 @@
     <Compile Update="MySQLParameterCollection.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MySQLSelectCommand.cs">
+    <Compile Update="DataAdapter\MySQLSelectCommand.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLTransaction.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MySQLUpdateCommand.cs">
+    <Compile Update="DataAdapter\MySQLUpdateCommand.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="MySQLUtils.cs">

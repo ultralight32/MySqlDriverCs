@@ -134,6 +134,7 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public void Close()
         {
+           
             if (!IsClosed)
             {
                 //Releases memory associated with the result set produced by execution of the prepared statement.
@@ -151,6 +152,7 @@ namespace MySQLDriverCS
                 if (_connection != null && m_CloseConnection)
                     _connection.Close();
             }
+            base.Dispose();
         }
 
         /// <summary>
@@ -158,7 +160,7 @@ namespace MySQLDriverCS
         /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
+         
             Close();
         }
 

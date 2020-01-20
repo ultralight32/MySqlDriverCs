@@ -176,7 +176,30 @@ namespace MySQLDriverCS
             Value = value;
         }
 
+        /// <summary>
+        /// Use MySQLParameter(string parameterName, DbType type)
+        /// </summary>
+        /// <param name="parameterName">The name of the parameter to map.</param>
+        /// <param name="dbType">One of the DbType values</param>
+        /// <param name="parameterDirection"></param>
+        public MySQLParameter(string parameterName, MySQLDbType dbType, ParameterDirection parameterDirection)
+        {
+            ParameterName = parameterName;
+            _dbType = dbType;
+            Direction = parameterDirection;
+        }
 
+        /// <summary>
+        /// Use MySQLParameter(string parameterName, DbType type)
+        /// </summary>
+        /// <param name="dbType">One of the DbType values</param>
+        /// <param name="parameterDirection"></param>
+        public MySQLParameter(MySQLDbType dbType, ParameterDirection parameterDirection)
+        {
+            ParameterName = null;
+            _dbType = dbType;
+            Direction = parameterDirection;
+        }
 
         /// <summary>
         /// Gets or sets the DbType of the parameter.
