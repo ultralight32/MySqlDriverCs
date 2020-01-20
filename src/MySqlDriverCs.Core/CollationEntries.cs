@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MySqlDriverCs
+namespace MySQLDriverCS
 {
     /// <summary>
     /// Data taken from https://dev.mysql.com/doc/internals/en/charsets.html

@@ -1,6 +1,6 @@
 using MySQLDriverCS;
 
-namespace MySqlDriverCs
+namespace MySQLDriverCS
 {
     /// <summary>
     /// After update event handler

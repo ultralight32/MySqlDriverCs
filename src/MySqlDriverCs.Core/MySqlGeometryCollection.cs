@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace MySQLDriverCS
 {
-    public class MySqlGeometryCollection : IMySqlGeometryObject, IEquatable<MySqlGeometryCollection>, IReadOnlyList<IMySqlGeometryObject>
+    public class MySqlGeometryCollection : IMySQLGeometryObject, IEquatable<MySqlGeometryCollection>, IReadOnlyList<IMySQLGeometryObject>
     {
-        private readonly IMySqlGeometryObject[] _objects;
+        private readonly IMySQLGeometryObject[] _objects;
 
-        public MySqlGeometryCollection(params IMySqlGeometryObject[] objects)
+        public MySqlGeometryCollection(params IMySQLGeometryObject[] objects)
         {
             if (objects == null) throw new ArgumentNullException(nameof(objects));
             this._objects = objects.ToArray();
@@ -17,7 +17,7 @@ namespace MySQLDriverCS
 
         public int Count => _objects.Length;
 
-        public IMySqlGeometryObject this[int index]
+        public IMySQLGeometryObject this[int index]
         {
             get { return _objects[index]; }
         }
@@ -47,7 +47,7 @@ namespace MySQLDriverCS
             return Equals((MySqlGeometryCollection)obj);
         }
 
-        public IEnumerator<IMySqlGeometryObject> GetEnumerator()
+        public IEnumerator<IMySQLGeometryObject> GetEnumerator()
         {
             foreach (var point in _objects)
             {

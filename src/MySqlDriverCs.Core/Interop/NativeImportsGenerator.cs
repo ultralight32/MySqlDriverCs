@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using MySQLDriverCS.Interop;
 
-namespace MySqlDriverCs.Interop
+namespace MySQLDriverCS.Interop
 {
     internal class NativeImportsWin32 : INativeProxy
     {
@@ -177,7 +177,7 @@ namespace MySqlDriverCs.Interop
     }
 }
 
-namespace MySqlDriverCs.Interop
+namespace MySQLDriverCS.Interop
 {
     internal class NativeImportsLinux : INativeProxy
     {

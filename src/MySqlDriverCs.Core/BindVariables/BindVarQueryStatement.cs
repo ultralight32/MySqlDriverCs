@@ -28,91 +28,78 @@
 
 using MySQLDriverCS.Interop;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace MySQLDriverCS
 {
-    public class MySQLRealQueryDataReader : IDataReader
+    internal class BindVarQueryStatement : BindVarStatement, IDataReader
     {
         private readonly MySQLConnection _connection;
-        private readonly uint _fieldCount;
-        private readonly NativeStatement _stmt;
 
-        private bool m_CloseConnection = false;
-        private MYSQL_FIELD[] m_fields;
+        private readonly bool _closeConnection = false;
+        private readonly MYSQL_FIELD[] _fields;
 
-        private MYSQL_BIND[] m_row;
+        private readonly MYSQL_BIND[] _rowColumns;
 
         private int MYSQL_NO_DATA = 100;
 
-        public MySQLRealQueryDataReader(uint fieldCount, NativeStatement stmt, MySQLConnection connection, bool closeConnection)
+        public BindVarQueryStatement(MySQLConnection connection, bool closeConnection, string query, MySQLParameterCollection parameterCollection, uint? fetchSize, CursorType cursorType) : base(connection, query, parameterCollection, fetchSize, cursorType)
         {
             _connection = connection;
-            _stmt = stmt;
-            m_CloseConnection = closeConnection;
+
+            var fields = new List<MYSQL_FIELD>();
+            using (var resultMetadata = new NativeResultMetadata(Stmt))
+            {
+                for (var i = 0; i < resultMetadata.mysql_num_fields(); i++)
+                {
+                    IntPtr fieldPtr = resultMetadata.mysql_fetch_field_direct((uint)i);
+                    var field = Marshal.PtrToStructure<MYSQL_FIELD>(fieldPtr);
+                    fields.Add(field);
+                }
+            }
+
+            if (Stmt.mysql_stmt_execute() != 0)
+            {
+                throw new MySqlException(Stmt);
+            }
+            _fields = fields.ToArray();
+            _closeConnection = closeConnection;
 
             IsClosed = false;
 
-            _fieldCount = fieldCount;
-
-            IntPtr fields;
-            if (_stmt._nativeConnection.ClientVersion.CompareTo("6.0.0") > 0)
+            _rowColumns = new MYSQL_BIND[_fields.Length];
+            for (var index = 0; index < _fields.Length; index++)
             {
-                MYSQL_STMT_6_1 mysql_stmt = (MYSQL_STMT_6_1)Marshal.PtrToStructure(stmt.stmt, typeof(MYSQL_STMT_6_1));
+                var fieldMetadata = _fields[index];
+                _rowColumns[index] = new MYSQL_BIND();
 
-                fields = mysql_stmt.result.data;
-            }
-            else
-            {
-                MYSQL_STMT mysql_stmt = (MYSQL_STMT)Marshal.PtrToStructure(stmt.stmt, typeof(MYSQL_STMT));
-
-                fields = mysql_stmt.result.data;
-            }
-
-            m_fields = (MYSQL_FIELD[])Array.CreateInstance(new MYSQL_FIELD().GetType(), _fieldCount);
-
-            long pointer = fields.ToInt64();
-            int index;
-            m_row = new MYSQL_BIND[_fieldCount];
-            for (index = 0; index < _fieldCount; index++)
-            {
-                var fieldMetadata = new MYSQL_FIELD();
-                IntPtr ptr = new IntPtr(pointer);
-                Marshal.PtrToStructure(ptr, fieldMetadata); // mysql fill out metadata information
-                pointer += Marshal.SizeOf(fieldMetadata);
-                m_fields[index] = fieldMetadata;
-                m_row[index] = new MYSQL_BIND();
-
-                if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_BLOB)
-                {
-                    fieldMetadata.MaxLength = 1024;    
-                }
                 //else if (fieldMetadata.Type == enum_field_types.MYSQL_TYPE_NULL && parameters != null && parameters.Count > index)//Caso select distinct donde mysql_stmt_bind_param3 mapea erroneamente a NULL
                 //{
                 //    // TODO: case needs deep review
                 //    fieldMetadata.Type = PreparedStatement.DbtoMysqlType(parameters[index].DbType);
                 //}
-                m_row[index].InitForBind(fieldMetadata,_stmt._nativeConnection);
+                _rowColumns[index].InitForBind(fieldMetadata, Stmt._nativeConnection);
             }
 
-            sbyte code = stmt.mysql_stmt_bind_result64(m_row);
+            sbyte code = Stmt.mysql_stmt_bind_result(_rowColumns);
             if (code != 0)
-                throw new MySqlException(stmt);
+                throw new MySqlException(Stmt);
         }
 
         /// <inheritdoc />
         public int Depth => 1;
 
         /// <inheritdoc />
-        public int FieldCount => (int)_fieldCount;
+        public int FieldCount => (int)_fields.Length;
 
         /// <inheritdoc />
         public bool IsClosed { get; private set; }
 
         /// <inheritdoc />
-        public int RecordsAffected => (int)_stmt.mysql_stmt_affected_rows();
+        public int RecordsAffected => (int)Stmt.mysql_stmt_affected_rows();
 
         /// <inheritdoc />
         public object this[string name]
@@ -120,9 +107,9 @@ namespace MySQLDriverCS
             get
             {
                 if (IsClosed) throw new MySqlException("Reader must be open");
-                for (int i = 0; i < m_fields.Length; i++)
+                for (int i = 0; i < _fields.Length; i++)
                 {
-                    if (m_fields[i].Name == name)
+                    if (_fields[i].Name == name)
                         return this[i];
                 }
                 throw new MySqlException("Invalid column name");
@@ -135,7 +122,7 @@ namespace MySQLDriverCS
             get
             {
                 if (IsClosed) throw new MySqlException("Reader must be open");
-                return m_row[i].GetValue(i,_stmt,m_fields[i]);
+                return _rowColumns[i].GetValue(i, Stmt, _fields[i]);
             }
         }
 
@@ -146,25 +133,26 @@ namespace MySQLDriverCS
             {
                 //Releases memory associated with the result set produced by execution of the prepared statement.
                 //If there is a cursor open for the statement, mysql_stmt_free_result() closes it.
-                int errorCode = _stmt.mysql_stmt_free_result();
+                int errorCode = Stmt.mysql_stmt_free_result();
                 if (errorCode != 0)//Error occurred
                 {
-                    throw new MySqlException(_stmt);
+                    throw new MySqlException(Stmt);
                 }
                 IsClosed = true;
-                for (int i = 0; i < _fieldCount; i++)
+                for (int i = 0; i < _fields.Length; i++)
                 {
                     RowDispose(i);
                 }
-                if (_connection != null && m_CloseConnection)
+                if (_connection != null && _closeConnection)
                     _connection.Close();
             }
+            base.Dispose();
         }
 
         /// <summary>
         /// Closes this reader
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             Close();
         }
@@ -178,18 +166,18 @@ namespace MySQLDriverCS
         /// <inheritdoc />
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
         {
-            if (m_row[i].GetLength() > m_row[i].BufferLength)//data truncation
+            if (_rowColumns[i].GetLength() > _rowColumns[i].BufferLength)//data truncation
             {
                 MYSQL_BIND[] newbind = new MYSQL_BIND[1];
                 newbind[0] = new MYSQL_BIND();
-                IMySqlField ft = new MYSQL_FIELD();
+                var ft = new MYSQL_FIELD();
                 ft.Type = enum_field_types.MYSQL_TYPE_BLOB;
                 ft.MaxLength = (uint)length;
-                newbind[0].InitForBind(ft,_stmt._nativeConnection);
+                newbind[0].InitForBind(ft, Stmt._nativeConnection);
 
-                sbyte errorCode = _stmt.mysql_stmt_fetch_column(newbind, (uint)i, (uint)fieldOffset);
+                sbyte errorCode = Stmt.mysql_stmt_fetch_column(newbind, (uint)i, (uint)fieldOffset);
                 if (errorCode != 0)
-                    throw new MySqlException(_stmt);
+                    throw new MySqlException(Stmt);
 
                 long result = Math.Min(length, newbind[0].GetLength() - fieldOffset);
                 newbind[0].GetBytes(buffer, (uint)result);
@@ -198,8 +186,8 @@ namespace MySQLDriverCS
             }
             else
             {
-                m_row[i].GetBytes(buffer, (uint)length);
-                return m_row[i].GetLength();
+                _rowColumns[i].GetBytes(buffer, (uint)length);
+                return _rowColumns[i].GetLength();
             }
         }
 
@@ -230,7 +218,7 @@ namespace MySQLDriverCS
         public double GetDouble(int i) { return (double)this[i]; }
 
         /// <inheritdoc />
-        public Type GetFieldType(int i) { return MySQLUtils.MySQLToNetType(m_fields[i].Type); }
+        public Type GetFieldType(int i) { return this[i]?.GetType(); }
 
         /// <inheritdoc />
         public float GetFloat(int i) { return (float)this[i]; }
@@ -248,14 +236,14 @@ namespace MySQLDriverCS
         public long GetInt64(int i) { return Convert.ToInt64(this[i]); }
 
         /// <inheritdoc />
-        public string GetName(int i) { return m_fields[i].Name; }
+        public string GetName(int i) { return _fields[i].Name; }
 
         /// <inheritdoc />
         public int GetOrdinal(string name)
         {
-            for (int i = 0; i < m_fields.Length; i++)
+            for (int i = 0; i < _fields.Length; i++)
             {
-                if (m_fields[i].Name == name)
+                if (_fields[i].Name == name)
                     return i;
             }
             throw new MySqlException("Field not found");
@@ -313,14 +301,14 @@ namespace MySQLDriverCS
         public bool Read()
         {
             if (IsClosed) return false;
-            var errorCode = _stmt.mysql_stmt_fetch();
+            var errorCode = Stmt.mysql_stmt_fetch();
             if (errorCode == MYSQL_NO_DATA)//No more rows/data exists
             {
                 return false;
             }
             else if (errorCode == 1)//Error occurred
             {
-                throw new MySqlException(_stmt);
+                throw new MySqlException(Stmt);
             }
             else
             {
@@ -332,12 +320,12 @@ namespace MySQLDriverCS
 
         public void RowDispose(int i)
         {
-            m_row[i].Dispose();
+            _rowColumns[i].Dispose();
         }
 
         public bool RowIsNull(int i)
         {
-            return m_row[i].GetIsNull();
+            return _rowColumns[i].GetIsNull();
         }
     }
 }

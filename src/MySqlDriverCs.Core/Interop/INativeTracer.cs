@@ -1,4 +1,4 @@
-namespace MySqlDriverCs.Interop
+namespace MySQLDriverCS.Interop
 {
     public interface INativeTracer
     {

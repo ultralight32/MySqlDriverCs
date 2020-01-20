@@ -23,7 +23,7 @@
 
 #endregion LICENSE
 
-using MySqlDriverCs.Interop;
+using MySQLDriverCS.Interop;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

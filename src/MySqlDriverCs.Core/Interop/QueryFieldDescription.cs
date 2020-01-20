@@ -2,9 +2,9 @@ using System;
 
 namespace MySQLDriverCS.Interop
 {
-    public class MySqlField
+    public class QueryFieldDescription
     {
-        public MySqlField(string name, enum_field_types type, long maxLength, uint length, MySqlFieldFlags flags)
+        public QueryFieldDescription(string name, enum_field_types type, long maxLength, uint length, MySqlFieldFlags flags)
         {
             Name = name;
             Type = type;
@@ -104,7 +104,7 @@ namespace MySQLDriverCS.Interop
                     else 
                         return typeof(string);
                 case enum_field_types.MYSQL_TYPE_GEOMETRY:
-                    return typeof(IMySqlGeometryObject);
+                    return typeof(IMySQLGeometryObject);
                 default:
                     throw new NotSupportedException();
             }

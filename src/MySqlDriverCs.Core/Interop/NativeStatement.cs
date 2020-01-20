@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using MySqlDriverCs.Interop;
+using MySQLDriverCS.Interop;
 
 namespace MySQLDriverCS.Interop
 {
@@ -109,7 +109,7 @@ namespace MySQLDriverCS.Interop
         [DllImport("libmysql.dll", EntryPoint = "mysql_stmt_bind_result")]
         public static extern sbyte mysql_stmt_bind_result64_win32(IntPtr stmt, MYSQL_BIND[] result);
 
-        public sbyte mysql_stmt_bind_result64(MYSQL_BIND[] result)
+        public sbyte mysql_stmt_bind_result(MYSQL_BIND[] result)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return mysql_stmt_bind_result64_win32(stmt, result);

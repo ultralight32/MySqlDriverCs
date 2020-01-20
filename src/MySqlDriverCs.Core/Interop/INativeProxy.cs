@@ -1,7 +1,7 @@
 ﻿using System;
 using MySQLDriverCS.Interop;
 
-namespace MySqlDriverCs.Interop
+namespace MySQLDriverCS.Interop
 {
     public interface INativeProxy
     {

@@ -5,33 +5,33 @@ using System.Linq;
 
 namespace MySQLDriverCS
 {
-    public class MySqlPolygon : IMySqlGeometryObject, IEquatable<MySqlPolygon>, IReadOnlyList<MySqlLineString>
+    public class MySQLPolygon : IMySQLGeometryObject, IEquatable<MySQLPolygon>, IReadOnlyList<MySQLLineString>
     {
-        private readonly MySqlLineString[] _segments;
+        private readonly MySQLLineString[] _segments;
 
-        public MySqlPolygon(params MySqlLineString[] segments)
+        public MySQLPolygon(params MySQLLineString[] segments)
         {
             _segments = segments ?? throw new ArgumentNullException(nameof(segments));
         }
 
         public int Count => _segments.Length;
 
-        public MySqlLineString this[int index]
+        public MySQLLineString this[int index]
         {
             get { return _segments[index]; }
         }
 
-        public static bool operator !=(MySqlPolygon left, MySqlPolygon right)
+        public static bool operator !=(MySQLPolygon left, MySQLPolygon right)
         {
             return !Equals(left, right);
         }
 
-        public static bool operator ==(MySqlPolygon left, MySqlPolygon right)
+        public static bool operator ==(MySQLPolygon left, MySQLPolygon right)
         {
             return Equals(left, right);
         }
 
-        public bool Equals(MySqlPolygon other)
+        public bool Equals(MySQLPolygon other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -43,10 +43,10 @@ namespace MySQLDriverCS
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((MySqlPolygon)obj);
+            return Equals((MySQLPolygon)obj);
         }
 
-        public IEnumerator<MySqlLineString> GetEnumerator()
+        public IEnumerator<MySQLLineString> GetEnumerator()
         {
             foreach (var point in _segments)
             {
