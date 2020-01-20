@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Runtime.InteropServices;
 using MySQLDriverCS.Interop;
@@ -13,7 +14,7 @@ namespace MySQLDriverCS
         protected int _detectedParamCount;
         protected int m_fetch_size;
         protected uint m_cursor_type;
-        protected uint m_field_count;
+
         private MYSQL_BIND[] m_bindparms;
 
         public PreparedStatement(MySQLConnection connection, string query)
@@ -25,7 +26,7 @@ namespace MySQLDriverCS
             prepared = false;
             _detectedParamCount = -1;
             m_fetch_size = 1;
-            m_field_count = 0;
+
         }
 
         public override void Dispose()
@@ -41,68 +42,6 @@ namespace MySQLDriverCS
             if (stmt == null) return;
             stmt.Dispose();
             stmt = null;
-        }
-
-        public static enum_field_types DbtoMysqlType(DbType dbtype)
-        {
-            switch (dbtype)
-            {
-                case DbType.AnsiStringFixedLength:
-                case DbType.StringFixedLength:
-                case DbType.String:
-                    return enum_field_types.MYSQL_TYPE_STRING;
-
-                case DbType.AnsiString:
-                    return enum_field_types.MYSQL_TYPE_VARCHAR;
-
-                case DbType.Binary:
-                    return enum_field_types.MYSQL_TYPE_BLOB;
-
-                case DbType.Boolean:
-                    return enum_field_types.MYSQL_TYPE_TINY;
-
-                case DbType.Byte:
-                    return enum_field_types.MYSQL_TYPE_TINY;
-                /*case DbType.Currency:
-                    return  FieldTypes5.MYSQL_TYPE_MONEY;*/
-                case DbType.Date:
-                    return enum_field_types.MYSQL_TYPE_DATE;
-
-                case DbType.DateTime:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case DbType.DateTime2:
-                    return enum_field_types.MYSQL_TYPE_DATETIME;
-
-                case DbType.Decimal:
-                    return enum_field_types.MYSQL_TYPE_DECIMAL;
-
-                case DbType.Double:
-                    return enum_field_types.MYSQL_TYPE_DOUBLE;
-                /*case DbType.Guid:
-                    return  FieldTypes5.MYSQL_TYPE_DOUBLE;*/
-                case DbType.Int16:
-                    return enum_field_types.MYSQL_TYPE_SHORT;
-
-                case DbType.Int32:
-                    return enum_field_types.MYSQL_TYPE_LONG;
-
-                case DbType.Int64:
-                    return enum_field_types.MYSQL_TYPE_LONGLONG;
-                /*case DbType.Object:
-                    return  FieldTypes5.MYSQL_TYPE_VARIANT;
-
-                case DbType.SByte:
-                    return  FieldTypes5.MYSQL_TYPE_LONGLONG;*/
-                case DbType.Single:
-                    return enum_field_types.MYSQL_TYPE_FLOAT;
-
-                case DbType.Time:
-                    return enum_field_types.MYSQL_TYPE_TIME;
-
-                default:
-                    return enum_field_types.MYSQL_TYPE_SHORT;
-            }
         }
 
         #region Statement Members
@@ -227,14 +166,14 @@ namespace MySQLDriverCS
                     else
                         m_bindparms[i].ResetIsNull();
                     if (bindInput.Length.HasValue)
-                        m_bindparms[i].SetLength((uint) bindInput.Length.Value);
+                        m_bindparms[i].SetLength((uint)bindInput.Length.Value);
                     else
                         m_bindparms[i].ResetLength();
-                    m_bindparms[i].is_unsigned = (byte) (bindInput.IsUnsigned?1:0);
+                    m_bindparms[i].is_unsigned = (byte)(bindInput.IsUnsigned ? 1 : 0);
                 }
                 else
                 {
-                   throw new NotSupportedException();
+                    throw new NotSupportedException();
                 }
             }
             int code = stmt.mysql_stmt_bind_param(m_bindparms);
@@ -263,19 +202,25 @@ namespace MySQLDriverCS
             if (!prepared)
                 Prepare();
             BindParameters();
-            if (m_field_count == 0)
+
+            var fields = new List<MYSQL_FIELD>();
+
+            using (var resultMetadata = new NativeResultMetadata(stmt))
             {
-                using (var resultMetadata = new NativeResultMetadata(stmt))
+                for (var i = 0; i < resultMetadata.mysql_num_fields(); i++)
                 {
-                    m_field_count = resultMetadata.mysql_num_fields();
+                    IntPtr fieldPtr = resultMetadata.mysql_fetch_field_direct((uint) i);
+                    var field = Marshal.PtrToStructure<MYSQL_FIELD>(fieldPtr);
+                    fields.Add(field);
                 }
             }
+
             if (stmt.mysql_stmt_execute() != 0)
             {
                 throw new MySqlException(stmt);
             }
 
-            return new MySQLRealQueryDataReader(m_field_count, stmt, connection, closeConnection);
+            return new MySQLRealQueryDataReader(fields.ToArray(), stmt, connection, closeConnection);
         }
 
         internal override int ExecuteCall()
